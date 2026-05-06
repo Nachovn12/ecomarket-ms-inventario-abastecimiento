@@ -8,6 +8,7 @@ public class ProductoResponseDTO {
     private Double precio;
     private int stock;
     private String categoria;
+    private String sucursal;
     private String disponibilidad;
 
     public Long getId() { return id; }
@@ -27,6 +28,9 @@ public class ProductoResponseDTO {
 
     public String getCategoria() { return categoria; }
     public void setCategoria(String categoria) { this.categoria = categoria; }
+
+    public String getSucursal() { return sucursal; }
+    public void setSucursal(String sucursal) { this.sucursal = sucursal; }
 
     public String getDisponibilidad() { return disponibilidad; }
     public void setDisponibilidad(String disponibilidad) { this.disponibilidad = disponibilidad; }

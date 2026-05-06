@@ -20,6 +20,8 @@ public class ProductoRequestDTO {
     @NotBlank(message = "La categoría es obligatoria")
     private String categoria;
 
+    private String sucursal;
+
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }
 
@@ -34,4 +36,7 @@ public class ProductoRequestDTO {
 
     public String getCategoria() { return categoria; }
     public void setCategoria(String categoria) { this.categoria = categoria; }
+
+    public String getSucursal() { return sucursal; }
+    public void setSucursal(String sucursal) { this.sucursal = sucursal; }
 }

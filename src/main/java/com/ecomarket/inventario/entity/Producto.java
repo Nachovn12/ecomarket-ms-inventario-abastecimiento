@@ -28,6 +28,8 @@ public class Producto {
     @NotBlank(message = "La categoría es obligatoria")
     private String categoria;
 
+    private String sucursal;
+
     public Producto() {}
 
     public Long getId() { return id; }
@@ -47,4 +49,7 @@ public class Producto {
 
     public String getCategoria() { return categoria; }
     public void setCategoria(String categoria) { this.categoria = categoria; }
+
+    public String getSucursal() { return sucursal; }
+    public void setSucursal(String sucursal) { this.sucursal = sucursal; }
 }
