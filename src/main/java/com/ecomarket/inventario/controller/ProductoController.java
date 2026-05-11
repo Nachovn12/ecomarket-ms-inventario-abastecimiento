@@ -32,4 +32,24 @@ public class ProductoController {
     public ResponseEntity<ProductoResponseDTO> obtenerProducto(@PathVariable Long id) {
         return ResponseEntity.ok(productoService.obtenerProducto(id));
     }
+
+    @GetMapping("/sku/{sku}")
+    public ResponseEntity<ProductoResponseDTO> obtenerPorSku(@PathVariable String sku) {
+        return ResponseEntity.ok(productoService.obtenerPorSku(sku));
+    }
+
+    @GetMapping("/buscar/nombre")
+    public ResponseEntity<List<ProductoResponseDTO>> buscarPorNombre(@RequestParam String nombre) {
+        return ResponseEntity.ok(productoService.buscarPorNombre(nombre));
+    }
+
+    @GetMapping("/buscar/categoria")
+    public ResponseEntity<List<ProductoResponseDTO>> buscarPorCategoria(@RequestParam String categoria) {
+        return ResponseEntity.ok(productoService.buscarPorCategoria(categoria));
+    }
+
+    @GetMapping("/buscar/sucursal")
+    public ResponseEntity<List<ProductoResponseDTO>> buscarPorSucursal(@RequestParam String sucursal) {
+        return ResponseEntity.ok(productoService.buscarPorSucursal(sucursal));
+    }
 }

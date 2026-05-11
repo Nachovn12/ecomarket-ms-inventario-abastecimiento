@@ -22,16 +22,14 @@ public class ProductoService {
         if (productoRepository.existsBySku(dto.getSku())) {
             throw new SkuDuplicadoException(dto.getSku());
         }
-
         Producto producto = new Producto();
         producto.setNombre(dto.getNombre());
         producto.setSku(dto.getSku());
         producto.setPrecio(dto.getPrecio());
         producto.setStock(dto.getStock());
         producto.setCategoria(dto.getCategoria());
-
-        Producto guardado = productoRepository.save(producto);
-        return mapToResponse(guardado);
+        producto.setSucursal(dto.getSucursal());
+        return mapToResponse(productoRepository.save(producto));
     }
 
     public List<ProductoResponseDTO> listarProductos() {
@@ -47,6 +45,33 @@ public class ProductoService {
         return mapToResponse(producto);
     }
 
+    public ProductoResponseDTO obtenerPorSku(String sku) {
+        Producto producto = productoRepository.findBySku(sku)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Producto no encontrado con SKU: " + sku));
+        return mapToResponse(producto);
+    }
+
+    public List<ProductoResponseDTO> buscarPorNombre(String nombre) {
+        return productoRepository.findByNombreContainingIgnoreCase(nombre)
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<ProductoResponseDTO> buscarPorCategoria(String categoria) {
+        return productoRepository.findByCategoriaIgnoreCase(categoria)
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<ProductoResponseDTO> buscarPorSucursal(String sucursal) {
+        return productoRepository.findBySucursalIgnoreCase(sucursal)
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
     private ProductoResponseDTO mapToResponse(Producto producto) {
         ProductoResponseDTO dto = new ProductoResponseDTO();
         dto.setId(producto.getId());
@@ -55,6 +80,7 @@ public class ProductoService {
         dto.setPrecio(producto.getPrecio());
         dto.setStock(producto.getStock());
         dto.setCategoria(producto.getCategoria());
+        dto.setSucursal(producto.getSucursal());
         dto.setDisponibilidad(producto.getStock() > 0 ? "DISPONIBLE" : "SIN STOCK");
         return dto;
     }
