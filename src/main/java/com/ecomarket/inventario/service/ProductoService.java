@@ -51,6 +51,28 @@ public class ProductoService {
         return mapToResponse(producto);
     }
 
+    public ProductoResponseDTO actualizarProducto(Long id, ProductoRequestDTO dto) {
+        Producto producto = productoRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Producto no encontrado con id: " + id));
+        if (!producto.getSku().equals(dto.getSku()) && productoRepository.existsBySku(dto.getSku())) {
+            throw new SkuDuplicadoException(dto.getSku());
+        }
+        producto.setNombre(dto.getNombre());
+        producto.setSku(dto.getSku());
+        producto.setPrecio(dto.getPrecio());
+        producto.setStock(dto.getStock());
+        producto.setCategoria(dto.getCategoria());
+        producto.setSucursal(dto.getSucursal());
+        return mapToResponse(productoRepository.save(producto));
+    }
+
+    public void eliminarProducto(Long id) {
+        if (!productoRepository.existsById(id)) {
+            throw new RecursoNoEncontradoException("Producto no encontrado con id: " + id);
+        }
+        productoRepository.deleteById(id);
+    }
+
     public List<ProductoResponseDTO> buscarPorNombre(String nombre) {
         return productoRepository.findByNombreContainingIgnoreCase(nombre)
                 .stream()

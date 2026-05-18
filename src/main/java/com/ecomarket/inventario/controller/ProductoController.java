@@ -5,11 +5,16 @@ import com.ecomarket.inventario.dto.ProductoResponseDTO;
 import com.ecomarket.inventario.service.ProductoService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 @RestController
 @RequestMapping("/api/productos")
@@ -19,23 +24,41 @@ public class ProductoController {
     private ProductoService productoService;
 
     @PostMapping
-    public ResponseEntity<ProductoResponseDTO> agregarProducto(@Valid @RequestBody ProductoRequestDTO dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(productoService.agregarProducto(dto));
+    public ResponseEntity<EntityModel<ProductoResponseDTO>> agregarProducto(@Valid @RequestBody ProductoRequestDTO dto) {
+        ProductoResponseDTO response = productoService.agregarProducto(dto);
+        EntityModel<ProductoResponseDTO> model = EntityModel.of(response,
+                linkTo(methodOn(ProductoController.class).obtenerProducto(response.getId())).withSelfRel(),
+                linkTo(methodOn(ProductoController.class).listarProductos()).withRel("productos"));
+        return ResponseEntity.status(HttpStatus.CREATED).body(model);
     }
 
     @GetMapping
-    public ResponseEntity<List<ProductoResponseDTO>> listarProductos() {
-        return ResponseEntity.ok(productoService.listarProductos());
+    public ResponseEntity<CollectionModel<EntityModel<ProductoResponseDTO>>> listarProductos() {
+        List<EntityModel<ProductoResponseDTO>> productos = productoService.listarProductos()
+                .stream()
+                .map(p -> EntityModel.of(p,
+                        linkTo(methodOn(ProductoController.class).obtenerProducto(p.getId())).withSelfRel()))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(CollectionModel.of(productos,
+                linkTo(methodOn(ProductoController.class).listarProductos()).withSelfRel()));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductoResponseDTO> obtenerProducto(@PathVariable Long id) {
-        return ResponseEntity.ok(productoService.obtenerProducto(id));
+    public ResponseEntity<EntityModel<ProductoResponseDTO>> obtenerProducto(@PathVariable Long id) {
+        ProductoResponseDTO response = productoService.obtenerProducto(id);
+        EntityModel<ProductoResponseDTO> model = EntityModel.of(response,
+                linkTo(methodOn(ProductoController.class).obtenerProducto(id)).withSelfRel(),
+                linkTo(methodOn(ProductoController.class).listarProductos()).withRel("productos"));
+        return ResponseEntity.ok(model);
     }
 
     @GetMapping("/sku/{sku}")
-    public ResponseEntity<ProductoResponseDTO> obtenerPorSku(@PathVariable String sku) {
-        return ResponseEntity.ok(productoService.obtenerPorSku(sku));
+    public ResponseEntity<EntityModel<ProductoResponseDTO>> obtenerPorSku(@PathVariable String sku) {
+        ProductoResponseDTO response = productoService.obtenerPorSku(sku);
+        EntityModel<ProductoResponseDTO> model = EntityModel.of(response,
+                linkTo(methodOn(ProductoController.class).obtenerPorSku(sku)).withSelfRel(),
+                linkTo(methodOn(ProductoController.class).listarProductos()).withRel("productos"));
+        return ResponseEntity.ok(model);
     }
 
     @GetMapping("/buscar/nombre")
@@ -51,5 +74,20 @@ public class ProductoController {
     @GetMapping("/buscar/sucursal")
     public ResponseEntity<List<ProductoResponseDTO>> buscarPorSucursal(@RequestParam String sucursal) {
         return ResponseEntity.ok(productoService.buscarPorSucursal(sucursal));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<EntityModel<ProductoResponseDTO>> actualizarProducto(@PathVariable Long id, @Valid @RequestBody ProductoRequestDTO dto) {
+        ProductoResponseDTO response = productoService.actualizarProducto(id, dto);
+        EntityModel<ProductoResponseDTO> model = EntityModel.of(response,
+                linkTo(methodOn(ProductoController.class).obtenerProducto(id)).withSelfRel(),
+                linkTo(methodOn(ProductoController.class).listarProductos()).withRel("productos"));
+        return ResponseEntity.ok(model);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminarProducto(@PathVariable Long id) {
+        productoService.eliminarProducto(id);
+        return ResponseEntity.noContent().build();
     }
 }
