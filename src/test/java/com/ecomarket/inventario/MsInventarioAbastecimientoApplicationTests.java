@@ -13,12 +13,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @TestPropertySource(properties = {
-    "spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1",
-    "spring.datasource.driver-class-name=org.h2.Driver",
-    "spring.datasource.username=sa",
-    "spring.datasource.password=",
-    "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect",
-    "spring.jpa.hibernate.ddl-auto=create-drop"
+        "spring.datasource.url=jdbc:h2:mem:inventario_test;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE",
+        "spring.datasource.driver-class-name=org.h2.Driver",
+        "spring.datasource.username=sa",
+        "spring.datasource.password=",
+        "spring.jpa.hibernate.ddl-auto=create-drop",
+        "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect",
+        "spring.sql.init.mode=never"
 })
 class MsInventarioAbastecimientoApplicationTests {
 
@@ -40,9 +41,11 @@ class MsInventarioAbastecimientoApplicationTests {
         producto.setPrecio(100.0);
         producto.setStock(50);
         producto.setCategoria("Test");
+        producto.setSucursal("Santiago");
         productoRepository.save(producto);
 
         Producto encontrado = productoRepository.findBySku("SKU-TEST-001").orElse(null);
+
         assertNotNull(encontrado);
         assertEquals(50, encontrado.getStock());
     }
@@ -55,6 +58,7 @@ class MsInventarioAbastecimientoApplicationTests {
         producto.setPrecio(200.0);
         producto.setStock(30);
         producto.setCategoria("Test");
+        producto.setSucursal("Valdivia");
         productoRepository.save(producto);
 
         AjusteStock ajuste = new AjusteStock();
@@ -69,21 +73,24 @@ class MsInventarioAbastecimientoApplicationTests {
         productoRepository.save(producto);
 
         Producto actualizado = productoRepository.findById(producto.getId()).orElse(null);
+
         assertNotNull(actualizado);
         assertEquals(50, actualizado.getStock());
     }
 
     @Test
     void testSkuUnico() {
-        Producto p1 = new Producto();
-        p1.setNombre("Producto SKU");
-        p1.setSku("SKU-UNICO-003");
-        p1.setPrecio(150.0);
-        p1.setStock(10);
-        p1.setCategoria("Test");
-        productoRepository.save(p1);
+        Producto producto = new Producto();
+        producto.setNombre("Producto SKU");
+        producto.setSku("SKU-UNICO-003");
+        producto.setPrecio(150.0);
+        producto.setStock(10);
+        producto.setCategoria("Test");
+        producto.setSucursal("Antofagasta");
+        productoRepository.save(producto);
 
         boolean existe = productoRepository.existsBySku("SKU-UNICO-003");
+
         assertTrue(existe);
     }
 
@@ -95,9 +102,11 @@ class MsInventarioAbastecimientoApplicationTests {
         producto.setPrecio(50.0);
         producto.setStock(0);
         producto.setCategoria("Test");
+        producto.setSucursal("Santiago");
         productoRepository.save(producto);
 
         Producto encontrado = productoRepository.findById(producto.getId()).orElse(null);
+
         assertNotNull(encontrado);
         assertEquals(0, encontrado.getStock());
     }
