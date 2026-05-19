@@ -22,7 +22,6 @@ public class PedidoReabastecimientoService {
     @Autowired
     private ProductoRepository productoRepository;
 
-    // CA1: Crear pedido
     public PedidoReabastecimientoResponseDTO crearPedido(PedidoReabastecimientoRequestDTO dto) {
         Producto producto = productoRepository.findById(dto.getProductoId())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Producto no encontrado con id: " + dto.getProductoId()));
@@ -35,28 +34,35 @@ public class PedidoReabastecimientoService {
         return mapToResponse(pedidoRepository.save(pedido));
     }
 
-    // CA2: Aprobar pedido
     public PedidoReabastecimientoResponseDTO aprobarPedido(Long id) {
-        PedidoReabastecimiento pedido = pedidoRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Pedido no encontrado con id: " + id));
+        PedidoReabastecimiento pedido = obtenerEntidad(id);
+
+        if (pedido.getEstado() != PedidoReabastecimiento.Estado.PENDIENTE) {
+            throw new IllegalArgumentException("Solo se pueden aprobar pedidos en estado PENDIENTE");
+        }
+
         pedido.setEstado(PedidoReabastecimiento.Estado.APROBADO);
         return mapToResponse(pedidoRepository.save(pedido));
     }
 
-    // CA3: Rechazar pedido
     public PedidoReabastecimientoResponseDTO rechazarPedido(Long id, String motivo) {
-        PedidoReabastecimiento pedido = pedidoRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Pedido no encontrado con id: " + id));
+        PedidoReabastecimiento pedido = obtenerEntidad(id);
+
+        if (pedido.getEstado() != PedidoReabastecimiento.Estado.PENDIENTE) {
+            throw new IllegalArgumentException("Solo se pueden rechazar pedidos en estado PENDIENTE");
+        }
+
+        if (motivo == null || motivo.isBlank()) {
+            throw new IllegalArgumentException("El motivo de rechazo es obligatorio");
+        }
+
         pedido.setEstado(PedidoReabastecimiento.Estado.RECHAZADO);
         pedido.setMotivoRechazo(motivo);
         return mapToResponse(pedidoRepository.save(pedido));
     }
 
-    // CA4: Consultar estado del pedido
     public PedidoReabastecimientoResponseDTO obtenerPedido(Long id) {
-        PedidoReabastecimiento pedido = pedidoRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Pedido no encontrado con id: " + id));
-        return mapToResponse(pedido);
+        return mapToResponse(obtenerEntidad(id));
     }
 
     public List<PedidoReabastecimientoResponseDTO> listarPedidos() {
@@ -64,6 +70,11 @@ public class PedidoReabastecimientoService {
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
+    }
+
+    private PedidoReabastecimiento obtenerEntidad(Long id) {
+        return pedidoRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Pedido no encontrado con id: " + id));
     }
 
     private PedidoReabastecimientoResponseDTO mapToResponse(PedidoReabastecimiento pedido) {
