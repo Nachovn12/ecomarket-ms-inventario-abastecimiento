@@ -26,22 +26,37 @@ public class RecepcionMercanciaService {
     @Autowired
     private ProductoRepository productoRepository;
 
-    // CA1, CA2, CA3, CA4
     public RecepcionMercanciaResponseDTO registrarRecepcion(RecepcionMercanciaRequestDTO dto) {
         PedidoReabastecimiento pedido = pedidoRepository.findById(dto.getPedidoId())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Pedido no encontrado con id: " + dto.getPedidoId()));
 
+        if (pedido.getEstado() != PedidoReabastecimiento.Estado.APROBADO) {
+            throw new IllegalArgumentException("Solo se puede registrar recepción de mercadería para pedidos en estado APROBADO");
+        }
+
+        if (dto.getCantidadRecibida() == null || dto.getCantidadRecibida() <= 0) {
+            throw new IllegalArgumentException("La cantidad recibida debe ser mayor a cero");
+        }
+
+        int cantidadRecibida = dto.getCantidadRecibida();
+        int cantidadDanada = dto.getCantidadDanada() != null ? dto.getCantidadDanada() : 0;
+
+        if (cantidadDanada < 0) {
+            throw new IllegalArgumentException("La cantidad dañada no puede ser negativa");
+        }
+
+        if (cantidadDanada > cantidadRecibida) {
+            throw new IllegalArgumentException("La cantidad dañada no puede ser mayor que la cantidad recibida");
+        }
+
         RecepcionMercancia recepcion = new RecepcionMercancia();
         recepcion.setPedido(pedido);
-        recepcion.setCantidadRecibida(dto.getCantidadRecibida());
-        recepcion.setCantidadDanada(dto.getCantidadDanada() != null ? dto.getCantidadDanada() : 0);
+        recepcion.setCantidadRecibida(cantidadRecibida);
+        recepcion.setCantidadDanada(cantidadDanada);
         recepcion.setDiferencias(dto.getDiferencias());
         recepcion.setRegistradoPor(dto.getRegistradoPor());
 
-        // Determinar estado
-        int cantidadDanada = recepcion.getCantidadDanada();
         int cantidadEsperada = pedido.getCantidad();
-        int cantidadRecibida = dto.getCantidadRecibida();
 
         if (cantidadDanada > 0) {
             recepcion.setEstado(RecepcionMercancia.EstadoRecepcion.CON_DANOS);
@@ -51,7 +66,6 @@ public class RecepcionMercanciaService {
             recepcion.setEstado(RecepcionMercancia.EstadoRecepcion.CONFORME);
         }
 
-        // CA2: Actualizar stock solo con productos en buen estado
         int cantidadAceptada = cantidadRecibida - cantidadDanada;
         if (cantidadAceptada > 0) {
             var producto = pedido.getProducto();
@@ -59,7 +73,6 @@ public class RecepcionMercanciaService {
             productoRepository.save(producto);
         }
 
-        // CA4: Actualizar pedido a RECIBIDO
         pedido.setEstado(PedidoReabastecimiento.Estado.RECIBIDO);
         pedidoRepository.save(pedido);
 
