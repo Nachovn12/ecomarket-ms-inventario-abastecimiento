@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 @RestController
-@RequestMapping("/api/productos")
+@RequestMapping("/api/inventario/productos")
 public class ProductoController {
 
     @Autowired

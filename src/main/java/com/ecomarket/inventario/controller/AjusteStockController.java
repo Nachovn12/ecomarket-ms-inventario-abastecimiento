@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/ajustes-stock")
+@RequestMapping("/api/inventario/ajustes-stock")
 public class AjusteStockController {
 
     @Autowired
