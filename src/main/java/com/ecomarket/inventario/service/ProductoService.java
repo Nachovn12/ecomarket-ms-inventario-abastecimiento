@@ -2,7 +2,7 @@ package com.ecomarket.inventario.service;
 
 import com.ecomarket.inventario.dto.ProductoRequestDTO;
 import com.ecomarket.inventario.dto.ProductoResponseDTO;
-import com.ecomarket.inventario.entity.Producto;
+import com.ecomarket.inventario.model.Producto;
 import com.ecomarket.inventario.exception.RecursoNoEncontradoException;
 import com.ecomarket.inventario.exception.SkuDuplicadoException;
 import com.ecomarket.inventario.repository.ProductoRepository;

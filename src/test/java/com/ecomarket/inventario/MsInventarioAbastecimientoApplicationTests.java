@@ -1,7 +1,7 @@
 package com.ecomarket.inventario;
 
-import com.ecomarket.inventario.entity.AjusteStock;
-import com.ecomarket.inventario.entity.Producto;
+import com.ecomarket.inventario.model.AjusteStock;
+import com.ecomarket.inventario.model.Producto;
 import com.ecomarket.inventario.repository.AjusteStockRepository;
 import com.ecomarket.inventario.repository.ProductoRepository;
 import org.junit.jupiter.api.Test;

@@ -1,6 +1,6 @@
 package com.ecomarket.inventario.repository;
 
-import com.ecomarket.inventario.entity.RecepcionMercancia;
+import com.ecomarket.inventario.model.RecepcionMercancia;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

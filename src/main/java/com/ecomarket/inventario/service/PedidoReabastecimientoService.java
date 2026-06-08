@@ -2,8 +2,8 @@ package com.ecomarket.inventario.service;
 
 import com.ecomarket.inventario.dto.PedidoReabastecimientoRequestDTO;
 import com.ecomarket.inventario.dto.PedidoReabastecimientoResponseDTO;
-import com.ecomarket.inventario.entity.PedidoReabastecimiento;
-import com.ecomarket.inventario.entity.Producto;
+import com.ecomarket.inventario.model.PedidoReabastecimiento;
+import com.ecomarket.inventario.model.Producto;
 import com.ecomarket.inventario.exception.RecursoNoEncontradoException;
 import com.ecomarket.inventario.repository.PedidoReabastecimientoRepository;
 import com.ecomarket.inventario.repository.ProductoRepository;
