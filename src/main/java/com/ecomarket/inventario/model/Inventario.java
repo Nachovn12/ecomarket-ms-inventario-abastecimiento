@@ -1,11 +1,14 @@
 package com.ecomarket.inventario.model;
 
-
-import lombok.Setter;
-import lombok.NoArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import jakarta.persistence.*;
 
+/**
+ * Entidad que representa el registro de inventario de un producto.
+ * Modelo legado utilizado para seguimiento básico de stock.
+ */
 @Entity
 @Table(name = "inventario")
 @Getter
@@ -21,7 +24,4 @@ public class Inventario {
     private int cantidadDisponible;
     private int cantidadMinima;
     private String categoria;
-
-    // Constructores
-    // Getters y Setters
 }

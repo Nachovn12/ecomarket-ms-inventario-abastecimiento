@@ -1,7 +1,14 @@
 package com.ecomarket.inventario.dto;
 
+import lombok.Getter;
+import lombok.Setter;
 import java.time.LocalDateTime;
 
+/**
+ * DTO de salida para exponer datos de un Pedido de Reabastecimiento sin exponer la entidad JPA.
+ */
+@Getter
+@Setter
 public class PedidoReabastecimientoResponseDTO {
 
     private Long id;
@@ -12,28 +19,4 @@ public class PedidoReabastecimientoResponseDTO {
     private String motivoRechazo;
     private String creadoPor;
     private LocalDateTime fechaCreacion;
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public Long getProductoId() { return productoId; }
-    public void setProductoId(Long productoId) { this.productoId = productoId; }
-
-    public String getNombreProducto() { return nombreProducto; }
-    public void setNombreProducto(String nombreProducto) { this.nombreProducto = nombreProducto; }
-
-    public Integer getCantidad() { return cantidad; }
-    public void setCantidad(Integer cantidad) { this.cantidad = cantidad; }
-
-    public String getEstado() { return estado; }
-    public void setEstado(String estado) { this.estado = estado; }
-
-    public String getMotivoRechazo() { return motivoRechazo; }
-    public void setMotivoRechazo(String motivoRechazo) { this.motivoRechazo = motivoRechazo; }
-
-    public String getCreadoPor() { return creadoPor; }
-    public void setCreadoPor(String creadoPor) { this.creadoPor = creadoPor; }
-
-    public LocalDateTime getFechaCreacion() { return fechaCreacion; }
-    public void setFechaCreacion(LocalDateTime fechaCreacion) { this.fechaCreacion = fechaCreacion; }
 }

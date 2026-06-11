@@ -1,13 +1,16 @@
 package com.ecomarket.inventario.model;
 
-
-import lombok.Setter;
-import lombok.NoArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
 import java.time.LocalDateTime;
 
+/**
+ * Entidad JPA del Pedido de Reabastecimiento.
+ * Ciclo de vida: PENDIENTE → APROBADO / RECHAZADO → RECIBIDO.
+ * Las validaciones de entrada se gestionan en PedidoReabastecimientoRequestDTO.
+ */
 @Entity
 @Table(name = "pedidos_reabastecimiento")
 @Getter
@@ -23,20 +26,21 @@ public class PedidoReabastecimiento {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull(message = "El producto es obligatorio")
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "producto_id", nullable = false)
     private Producto producto;
 
-    @NotNull(message = "La cantidad es obligatoria")
-    @Min(value = 1, message = "La cantidad debe ser mayor a 0")
+    @Column(nullable = false)
     private Integer cantidad;
 
     @Enumerated(EnumType.STRING)
-    private Estado estado;
+    @Column(nullable = false, length = 20)
+    private Estado estado = Estado.PENDIENTE;
 
+    @Column(length = 500)
     private String motivoRechazo;
 
+    @Column(length = 120)
     private String creadoPor;
 
     private LocalDateTime fechaCreacion;
@@ -44,6 +48,8 @@ public class PedidoReabastecimiento {
     @PrePersist
     public void prePersist() {
         this.fechaCreacion = LocalDateTime.now();
-        this.estado = Estado.PENDIENTE;
+        if (this.estado == null) {
+            this.estado = Estado.PENDIENTE;
+        }
     }
 }

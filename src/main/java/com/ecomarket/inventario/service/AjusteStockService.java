@@ -2,19 +2,28 @@ package com.ecomarket.inventario.service;
 
 import com.ecomarket.inventario.dto.AjusteStockRequestDTO;
 import com.ecomarket.inventario.dto.AjusteStockResponseDTO;
+import com.ecomarket.inventario.exception.RecursoNoEncontradoException;
 import com.ecomarket.inventario.model.AjusteStock;
 import com.ecomarket.inventario.model.Producto;
-import com.ecomarket.inventario.exception.RecursoNoEncontradoException;
 import com.ecomarket.inventario.repository.AjusteStockRepository;
 import com.ecomarket.inventario.repository.ProductoRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Servicio de Ajuste de Stock.
+ * Registra cambios de cantidad con motivo, manteniendo historial de ajustes.
+ */
 @Service
 public class AjusteStockService {
+
+    private static final Logger log = LoggerFactory.getLogger(AjusteStockService.class);
 
     @Autowired
     private AjusteStockRepository ajusteStockRepository;
@@ -22,10 +31,14 @@ public class AjusteStockService {
     @Autowired
     private ProductoRepository productoRepository;
 
-    // CA1 y CA2: Ajuste de stock con motivo obligatorio
+    @Transactional
     public AjusteStockResponseDTO ajustarStock(AjusteStockRequestDTO dto) {
+        log.info("Ajustando stock. productoId={}, cantidadNueva={}",
+                dto.getProductoId(), dto.getCantidadNueva());
+
         Producto producto = productoRepository.findById(dto.getProductoId())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Producto no encontrado con id: " + dto.getProductoId()));
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "Producto no encontrado con id: " + dto.getProductoId()));
 
         AjusteStock ajuste = new AjusteStock();
         ajuste.setProducto(producto);
@@ -37,18 +50,24 @@ public class AjusteStockService {
         producto.setStock(dto.getCantidadNueva());
         productoRepository.save(producto);
 
-        return mapToResponse(ajusteStockRepository.save(ajuste));
+        AjusteStockResponseDTO response = mapToResponse(ajusteStockRepository.save(ajuste));
+        log.info("Stock ajustado correctamente. productoId={}, anterior={}, nuevo={}",
+                dto.getProductoId(), ajuste.getCantidadAnterior(), dto.getCantidadNueva());
+        return response;
     }
 
-    // CA3: Historial de ajustes por producto
+    @Transactional(readOnly = true)
     public List<AjusteStockResponseDTO> obtenerHistorialPorProducto(Long productoId) {
+        log.info("Consultando historial de ajustes. productoId={}", productoId);
         return ajusteStockRepository.findByProductoId(productoId)
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<AjusteStockResponseDTO> listarAjustes() {
+        log.info("Listando todos los ajustes de stock");
         return ajusteStockRepository.findAll()
                 .stream()
                 .map(this::mapToResponse)

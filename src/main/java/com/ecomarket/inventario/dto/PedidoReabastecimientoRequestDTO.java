@@ -1,7 +1,17 @@
 package com.ecomarket.inventario.dto;
 
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
 
+/**
+ * DTO de entrada para crear un Pedido de Reabastecimiento.
+ * Incluye validaciones Bean Validation (JSR 380).
+ */
+@Getter
+@Setter
 public class PedidoReabastecimientoRequestDTO {
 
     @NotNull(message = "El ID del producto es obligatorio")
@@ -11,20 +21,6 @@ public class PedidoReabastecimientoRequestDTO {
     @Min(value = 1, message = "La cantidad debe ser mayor a 0")
     private Integer cantidad;
 
-    @NotBlank(message = "El usuario es obligatorio")
+    @NotBlank(message = "El usuario que crea el pedido es obligatorio")
     private String creadoPor;
-
-    private String motivoRechazo;
-
-    public Long getProductoId() { return productoId; }
-    public void setProductoId(Long productoId) { this.productoId = productoId; }
-
-    public Integer getCantidad() { return cantidad; }
-    public void setCantidad(Integer cantidad) { this.cantidad = cantidad; }
-
-    public String getCreadoPor() { return creadoPor; }
-    public void setCreadoPor(String creadoPor) { this.creadoPor = creadoPor; }
-
-    public String getMotivoRechazo() { return motivoRechazo; }
-    public void setMotivoRechazo(String motivoRechazo) { this.motivoRechazo = motivoRechazo; }
 }
