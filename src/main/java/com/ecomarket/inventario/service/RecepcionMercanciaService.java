@@ -18,9 +18,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Servicio de Recepción de Mercancía.
+ * Servicio de recepción de mercancía.
  * Registra la recepción física de un pedido de reabastecimiento,
- * actualiza el stock del producto y cierra el pedido como RECIBIDO.
+ * Actualiza el stock del producto y cierra el pedido como recibido.
  */
 @Service
 public class RecepcionMercanciaService {

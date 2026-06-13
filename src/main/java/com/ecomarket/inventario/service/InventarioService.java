@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Servicio de Inventario legado.
+ * Servicio de inventario legado.
  * Gestiona el registro básico de inventario y proveedores.
  */
 @Service
@@ -81,6 +81,12 @@ public class InventarioService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("Inventario no encontrado con id: " + id));
         inventario.setCantidadDisponible(cantidad);
         log.info("Stock actualizado correctamente. id={}", id);
+
+        if (inventario.getCantidadMinima() > 0 && cantidad < inventario.getCantidadMinima()) {
+            log.warn("ALERTA STOCK MINIMO: inventarioId={}, producto={}, stock actual={}, minimo={}. Se sugiere reabastecimiento.",
+                    id, inventario.getNombreProducto(), cantidad, inventario.getCantidadMinima());
+        }
+
         return mapToResponse(inventarioRepository.save(inventario));
     }
 

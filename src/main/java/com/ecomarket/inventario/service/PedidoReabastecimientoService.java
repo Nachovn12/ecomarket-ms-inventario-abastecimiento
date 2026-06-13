@@ -17,8 +17,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Servicio de Pedidos de Reabastecimiento.
- * Gestiona el ciclo de vida: PENDIENTE → APROBADO / RECHAZADO → RECIBIDO.
+ * Servicio de pedidos de reabastecimiento.
+ * Gestiona el ciclo de vida: pendiente → aprobado / rechazado → recibido.
  */
 @Service
 public class PedidoReabastecimientoService {

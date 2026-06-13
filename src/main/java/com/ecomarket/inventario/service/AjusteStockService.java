@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Servicio de Ajuste de Stock.
+ * Servicio de ajuste de stock.
  * Registra cambios de cantidad con motivo, manteniendo historial de ajustes.
  */
 @Service
@@ -53,6 +53,12 @@ public class AjusteStockService {
         AjusteStockResponseDTO response = mapToResponse(ajusteStockRepository.save(ajuste));
         log.info("Stock ajustado correctamente. productoId={}, anterior={}, nuevo={}",
                 dto.getProductoId(), ajuste.getCantidadAnterior(), dto.getCantidadNueva());
+
+        if (producto.getStockMinimo() > 0 && dto.getCantidadNueva() < producto.getStockMinimo()) {
+            log.warn("ALERTA STOCK MINIMO: productoId={}, nombre={}, stock actual={}, minimo={}. Se sugiere reabastecimiento.",
+                    producto.getId(), producto.getNombre(), dto.getCantidadNueva(), producto.getStockMinimo());
+        }
+
         return response;
     }
 

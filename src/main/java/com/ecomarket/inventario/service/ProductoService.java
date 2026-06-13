@@ -6,6 +6,8 @@ import com.ecomarket.inventario.model.Producto;
 import com.ecomarket.inventario.exception.RecursoNoEncontradoException;
 import com.ecomarket.inventario.exception.SkuDuplicadoException;
 import com.ecomarket.inventario.repository.ProductoRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,10 +17,13 @@ import java.util.stream.Collectors;
 @Service
 public class ProductoService {
 
+    private static final Logger log = LoggerFactory.getLogger(ProductoService.class);
+
     @Autowired
     private ProductoRepository productoRepository;
 
     public ProductoResponseDTO agregarProducto(ProductoRequestDTO dto) {
+        log.info("Creando producto: {}", dto.getNombre());
         if (productoRepository.existsBySku(dto.getSku())) {
             throw new SkuDuplicadoException(dto.getSku());
         }
@@ -52,6 +57,7 @@ public class ProductoService {
     }
 
     public ProductoResponseDTO actualizarProducto(Long id, ProductoRequestDTO dto) {
+        log.info("Actualizando producto id={}, nombre={}", id, dto.getNombre());
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Producto no encontrado con id: " + id));
         if (!producto.getSku().equals(dto.getSku()) && productoRepository.existsBySku(dto.getSku())) {
@@ -67,6 +73,7 @@ public class ProductoService {
     }
 
     public void eliminarProducto(Long id) {
+        log.info("Eliminando producto id={}", id);
         if (!productoRepository.existsById(id)) {
             throw new RecursoNoEncontradoException("Producto no encontrado con id: " + id);
         }
