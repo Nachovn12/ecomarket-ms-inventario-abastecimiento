@@ -1,8 +1,15 @@
 package com.ecomarket.inventario.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 @Schema(description = "Datos para crear o actualizar un producto de inventario")
 public class ProductoRequestDTO {
 
@@ -29,22 +36,4 @@ public class ProductoRequestDTO {
 
     @Schema(description = "Sucursal donde se almacena", example = "Santiago Centro")
     private String sucursal;
-
-    public String getNombre() { return nombre; }
-    public void setNombre(String nombre) { this.nombre = nombre; }
-
-    public String getSku() { return sku; }
-    public void setSku(String sku) { this.sku = sku; }
-
-    public Double getPrecio() { return precio; }
-    public void setPrecio(Double precio) { this.precio = precio; }
-
-    public int getStock() { return stock; }
-    public void setStock(int stock) { this.stock = stock; }
-
-    public String getCategoria() { return categoria; }
-    public void setCategoria(String categoria) { this.categoria = categoria; }
-
-    public String getSucursal() { return sucursal; }
-    public void setSucursal(String sucursal) { this.sucursal = sucursal; }
 }

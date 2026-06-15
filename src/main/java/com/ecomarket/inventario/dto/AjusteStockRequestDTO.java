@@ -1,8 +1,14 @@
 package com.ecomarket.inventario.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 @Schema(description = "Solicitud para registrar un ajuste manual de stock de un producto")
 public class AjusteStockRequestDTO {
 
@@ -22,16 +28,4 @@ public class AjusteStockRequestDTO {
     @NotBlank(message = "El usuario responsable es obligatorio")
     @Schema(description = "Usuario que registra el ajuste", example = "operador1", requiredMode = Schema.RequiredMode.REQUIRED)
     private String usuarioResponsable;
-
-    public Long getProductoId() { return productoId; }
-    public void setProductoId(Long productoId) { this.productoId = productoId; }
-
-    public Integer getCantidadNueva() { return cantidadNueva; }
-    public void setCantidadNueva(Integer cantidadNueva) { this.cantidadNueva = cantidadNueva; }
-
-    public String getMotivo() { return motivo; }
-    public void setMotivo(String motivo) { this.motivo = motivo; }
-
-    public String getUsuarioResponsable() { return usuarioResponsable; }
-    public void setUsuarioResponsable(String usuarioResponsable) { this.usuarioResponsable = usuarioResponsable; }
 }

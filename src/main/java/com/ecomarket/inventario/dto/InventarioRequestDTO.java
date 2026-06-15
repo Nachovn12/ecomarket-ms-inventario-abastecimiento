@@ -4,11 +4,15 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * DTO de entrada para crear o actualizar un registro de inventario.
  * Incluye validaciones bean validation (JSR 380).
  */
+@Getter
+@Setter
 @Schema(description = "Datos para crear o actualizar un registro de inventario legado")
 public class InventarioRequestDTO {
 
@@ -29,16 +33,4 @@ public class InventarioRequestDTO {
     @Size(max = 100, message = "La categoria no puede superar 100 caracteres")
     @Schema(description = "Categoria del producto", example = "Biodegradables", maxLength = 100, requiredMode = Schema.RequiredMode.REQUIRED)
     private String categoria;
-
-    public String getNombreProducto() { return nombreProducto; }
-    public void setNombreProducto(String nombreProducto) { this.nombreProducto = nombreProducto; }
-
-    public int getCantidadDisponible() { return cantidadDisponible; }
-    public void setCantidadDisponible(int cantidadDisponible) { this.cantidadDisponible = cantidadDisponible; }
-
-    public int getCantidadMinima() { return cantidadMinima; }
-    public void setCantidadMinima(int cantidadMinima) { this.cantidadMinima = cantidadMinima; }
-
-    public String getCategoria() { return categoria; }
-    public void setCategoria(String categoria) { this.categoria = categoria; }
 }

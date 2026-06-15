@@ -1,7 +1,11 @@
 package com.ecomarket.inventario.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 @Schema(description = "Datos de un proveedor del sistema")
 public class ProveedorDTO {
 
@@ -19,19 +23,4 @@ public class ProveedorDTO {
 
     @Schema(description = "Telefono de contacto", example = "+56 2 2345 6789")
     private String telefono;
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public String getNombre() { return nombre; }
-    public void setNombre(String nombre) { this.nombre = nombre; }
-
-    public String getContacto() { return contacto; }
-    public void setContacto(String contacto) { this.contacto = contacto; }
-
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
-
-    public String getTelefono() { return telefono; }
-    public void setTelefono(String telefono) { this.telefono = telefono; }
 }
