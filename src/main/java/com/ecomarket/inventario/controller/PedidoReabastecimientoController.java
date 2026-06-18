@@ -12,16 +12,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.CollectionModel;
-import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
-
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 @RestController
 @RequestMapping("/api/inventario/pedidos-reabastecimiento")
@@ -38,11 +33,8 @@ public class PedidoReabastecimientoController {
             @ApiResponse(responseCode = "400", description = "Datos invalidos", content = @Content)
     })
     @PostMapping
-    public ResponseEntity<EntityModel<PedidoReabastecimientoResponseDTO>> crearPedido(
-            @Valid @RequestBody PedidoReabastecimientoRequestDTO dto) {
-
-        PedidoReabastecimientoResponseDTO response = pedidoService.crearPedido(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(toModel(response));
+    public ResponseEntity<PedidoReabastecimientoResponseDTO> crearPedido(@Valid @RequestBody PedidoReabastecimientoRequestDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(pedidoService.crearPedido(dto));
     }
 
     @Operation(summary = "Aprobar un pedido de reabastecimiento")
@@ -53,10 +45,9 @@ public class PedidoReabastecimientoController {
             @ApiResponse(responseCode = "409", description = "Pedido no se puede aprobar en su estado actual", content = @Content)
     })
     @PutMapping("/{id}/aprobar")
-    public ResponseEntity<EntityModel<PedidoReabastecimientoResponseDTO>> aprobarPedido(
+    public ResponseEntity<PedidoReabastecimientoResponseDTO> aprobarPedido(
             @Parameter(description = "ID del pedido", example = "1", required = true) @PathVariable Long id) {
-        PedidoReabastecimientoResponseDTO response = pedidoService.aprobarPedido(id);
-        return ResponseEntity.ok(toModel(response));
+        return ResponseEntity.ok(pedidoService.aprobarPedido(id));
     }
 
     @Operation(summary = "Rechazar un pedido de reabastecimiento")
@@ -66,13 +57,11 @@ public class PedidoReabastecimientoController {
             @ApiResponse(responseCode = "404", description = "Pedido no encontrado", content = @Content)
     })
     @PutMapping("/{id}/rechazar")
-    public ResponseEntity<EntityModel<PedidoReabastecimientoResponseDTO>> rechazarPedido(
+    public ResponseEntity<PedidoReabastecimientoResponseDTO> rechazarPedido(
             @Parameter(description = "ID del pedido", example = "1", required = true) @PathVariable Long id,
             @Parameter(description = "Motivo del rechazo", example = "Stock suficiente", required = true)
             @RequestParam String motivo) {
-
-        PedidoReabastecimientoResponseDTO response = pedidoService.rechazarPedido(id, motivo);
-        return ResponseEntity.ok(toModel(response));
+        return ResponseEntity.ok(pedidoService.rechazarPedido(id, motivo));
     }
 
     @Operation(summary = "Obtener un pedido de reabastecimiento por ID")
@@ -82,39 +71,16 @@ public class PedidoReabastecimientoController {
             @ApiResponse(responseCode = "404", description = "Pedido no encontrado", content = @Content)
     })
     @GetMapping("/{id}")
-    public ResponseEntity<EntityModel<PedidoReabastecimientoResponseDTO>> obtenerPedido(
+    public ResponseEntity<PedidoReabastecimientoResponseDTO> obtenerPedido(
             @Parameter(description = "ID del pedido", example = "1", required = true) @PathVariable Long id) {
-        PedidoReabastecimientoResponseDTO response = pedidoService.obtenerPedido(id);
-        return ResponseEntity.ok(toModel(response));
+        return ResponseEntity.ok(pedidoService.obtenerPedido(id));
     }
 
     @Operation(summary = "Listar todos los pedidos de reabastecimiento")
     @ApiResponse(responseCode = "200", description = "Listado de pedidos",
             content = @Content(schema = @Schema(implementation = PedidoReabastecimientoResponseDTO.class)))
     @GetMapping
-    public ResponseEntity<CollectionModel<EntityModel<PedidoReabastecimientoResponseDTO>>> listarPedidos() {
-        List<EntityModel<PedidoReabastecimientoResponseDTO>> pedidos = pedidoService.listarPedidos()
-                .stream()
-                .map(this::toModel)
-                .collect(Collectors.toList());
-
-        CollectionModel<EntityModel<PedidoReabastecimientoResponseDTO>> collection = CollectionModel.of(pedidos);
-        collection.add(linkTo(methodOn(PedidoReabastecimientoController.class).listarPedidos()).withSelfRel());
-
-        return ResponseEntity.ok(collection);
-    }
-
-    private EntityModel<PedidoReabastecimientoResponseDTO> toModel(PedidoReabastecimientoResponseDTO pedido) {
-        EntityModel<PedidoReabastecimientoResponseDTO> model = EntityModel.of(pedido);
-
-        model.add(linkTo(methodOn(PedidoReabastecimientoController.class).listarPedidos()).withRel("pedidos-reabastecimiento"));
-
-        if (pedido.getId() != null) {
-            model.add(linkTo(methodOn(PedidoReabastecimientoController.class).obtenerPedido(pedido.getId())).withSelfRel());
-            model.add(linkTo(methodOn(PedidoReabastecimientoController.class).aprobarPedido(pedido.getId())).withRel("aprobar"));
-            model.add(linkTo(methodOn(PedidoReabastecimientoController.class).rechazarPedido(pedido.getId(), "motivo")).withRel("rechazar"));
-        }
-
-        return model;
+    public ResponseEntity<List<PedidoReabastecimientoResponseDTO>> listarPedidos() {
+        return ResponseEntity.ok(pedidoService.listarPedidos());
     }
 }
