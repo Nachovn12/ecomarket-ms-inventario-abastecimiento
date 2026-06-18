@@ -26,6 +26,14 @@ public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+    @ExceptionHandler(ReglaDeNegocioException.class)
+    public ResponseEntity<Map<String, Object>> handleReglaDeNegocio(
+            ReglaDeNegocioException ex, HttpServletRequest req) {
+        log.warn("Regla de negocio violada: {} - path: {}", ex.getMessage(), req.getRequestURI());
+        return buildResponse(HttpStatus.UNPROCESSABLE_ENTITY, "Regla de negocio violada",
+                ex.getMessage(), req.getRequestURI());
+    }
+
     @ExceptionHandler(SkuDuplicadoException.class)
     public ResponseEntity<Map<String, Object>> handleSkuDuplicado(
             SkuDuplicadoException ex, HttpServletRequest req) {

@@ -3,6 +3,7 @@ package com.ecomarket.inventario.service;
 import com.ecomarket.inventario.dto.AjusteStockRequestDTO;
 import com.ecomarket.inventario.dto.AjusteStockResponseDTO;
 import com.ecomarket.inventario.exception.RecursoNoEncontradoException;
+import com.ecomarket.inventario.exception.ReglaDeNegocioException;
 import com.ecomarket.inventario.model.AjusteStock;
 import com.ecomarket.inventario.model.Producto;
 import com.ecomarket.inventario.repository.AjusteStockRepository;
@@ -41,6 +42,12 @@ public class AjusteStockService {
                         "Producto no encontrado con id: " + dto.getProductoId()));
 
         AjusteStock ajuste = new AjusteStock();
+        if (producto.getStockMinimo() > 0 && dto.getCantidadNueva() < producto.getStockMinimo()) {
+            throw new ReglaDeNegocioException(
+                    "El ajuste dejaría el stock (" + dto.getCantidadNueva() +
+                    ") por debajo del mínimo (" + producto.getStockMinimo() + ")");
+        }
+
         ajuste.setProducto(producto);
         ajuste.setCantidadAnterior(producto.getStock());
         ajuste.setCantidadNueva(dto.getCantidadNueva());
@@ -53,11 +60,6 @@ public class AjusteStockService {
         AjusteStockResponseDTO response = mapToResponse(ajusteStockRepository.save(ajuste));
         log.info("Stock ajustado correctamente. productoId={}, anterior={}, nuevo={}",
                 dto.getProductoId(), ajuste.getCantidadAnterior(), dto.getCantidadNueva());
-
-        if (producto.getStockMinimo() > 0 && dto.getCantidadNueva() < producto.getStockMinimo()) {
-            log.warn("ALERTA STOCK MINIMO: productoId={}, nombre={}, stock actual={}, minimo={}. Se sugiere reabastecimiento.",
-                    producto.getId(), producto.getNombre(), dto.getCantidadNueva(), producto.getStockMinimo());
-        }
 
         return response;
     }
