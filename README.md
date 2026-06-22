@@ -82,10 +82,11 @@ cd .\ms-inventario-abastecimiento\
 .\mvnw.cmd test
 ```
 
-O desde la raiz:
+O entrando al directorio (recomendado):
 
 ```powershell
-.\ms-inventario-abastecimiento\mvnw.cmd -f ms-inventario-abastecimiento/pom.xml clean test
+cd .\ms-inventario-abastecimiento\
+.\mvnw.cmd clean test
 ```
 
 ## Endpoints principales
