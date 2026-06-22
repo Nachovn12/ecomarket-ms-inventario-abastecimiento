@@ -2,8 +2,10 @@ package com.ecomarket.inventario.service;
 
 import com.ecomarket.inventario.dto.InventarioRequestDTO;
 import com.ecomarket.inventario.dto.InventarioResponseDTO;
+import com.ecomarket.inventario.dto.ProveedorDTO;
 import com.ecomarket.inventario.exception.RecursoNoEncontradoException;
 import com.ecomarket.inventario.model.Inventario;
+import com.ecomarket.inventario.model.Proveedor;
 import com.ecomarket.inventario.repository.InventarioRepository;
 import com.ecomarket.inventario.repository.ProveedorRepository;
 import org.junit.jupiter.api.Test;
@@ -12,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -40,7 +43,6 @@ class InventarioServiceTest {
         return inv;
     }
 
-    // AC-3: Consulta de stock por producto y tienda → retorna stock actualizado
     @Test
     void obtenerInventario_conIdValido_retornaStockActualizado() {
         Inventario inv = buildInventario(1L, 100, 10);
@@ -54,7 +56,6 @@ class InventarioServiceTest {
         verify(inventarioRepository).findById(1L);
     }
 
-    // AC-3: Reserva de stock para pedido → descuenta stock reservado
     @Test
     void actualizarStock_conCantidadMenor_descontaStockReservado() {
         Inventario inv = buildInventario(1L, 100, 5);
@@ -69,7 +70,6 @@ class InventarioServiceTest {
         verify(inventarioRepository).save(any(Inventario.class));
     }
 
-    // AC-3: Liberación de reserva en cancelación → restaura stock
     @Test
     void actualizarStock_conCantidadMayor_restauraStock() {
         Inventario inv = buildInventario(1L, 80, 5);
@@ -84,7 +84,6 @@ class InventarioServiceTest {
         assertTrue(result.getCantidadDisponible() > 80, "El stock fue restaurado");
     }
 
-    // AC-4: Alerta automática cuando stock <= stockMinimo → stock igual se persiste y dispara alerta
     @Test
     void actualizarStock_conStockBajoMinimo_persisteYDispararAlerta() {
         Inventario inv = buildInventario(1L, 30, 20);
@@ -95,7 +94,6 @@ class InventarioServiceTest {
 
         InventarioResponseDTO result = inventarioService.actualizarStock(1L, 5);
 
-        // Servicio persiste el stock bajo mínimo (la alerta es un log.warn)
         assertEquals(5, result.getCantidadDisponible());
         assertTrue(result.getCantidadDisponible() < result.getCantidadMinima(),
                 "Stock resultante debe quedar bajo el mínimo configurado");
@@ -127,5 +125,81 @@ class InventarioServiceTest {
         assertEquals(1L, result.getId());
         assertEquals("Bolsa Biodegradable", result.getNombreProducto());
         verify(inventarioRepository).save(any(Inventario.class));
+    }
+
+    @Test
+    void crearInventario_conCantidadMinimaMayorQueDisponible_lanzaIllegalArgumentException() {
+        InventarioRequestDTO dto = new InventarioRequestDTO();
+        dto.setNombreProducto("Bolsa Biodegradable");
+        dto.setCantidadDisponible(5);
+        dto.setCantidadMinima(20);
+        dto.setCategoria("Biodegradables");
+
+        assertThrows(IllegalArgumentException.class,
+                () -> inventarioService.crearInventario(dto));
+        verify(inventarioRepository, never()).save(any());
+    }
+
+    @Test
+    void listarInventarios_retornaListaCompleta() {
+        Inventario inv1 = buildInventario(1L, 100, 10);
+        Inventario inv2 = buildInventario(2L, 50, 5);
+        when(inventarioRepository.findAll()).thenReturn(List.of(inv1, inv2));
+
+        List<InventarioResponseDTO> result = inventarioService.listarInventarios();
+
+        assertEquals(2, result.size());
+        assertEquals(100, result.get(0).getCantidadDisponible());
+        verify(inventarioRepository).findAll();
+    }
+
+    @Test
+    void actualizarStock_conCantidadNegativa_lanzaIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class,
+                () -> inventarioService.actualizarStock(1L, -1));
+        verify(inventarioRepository, never()).findById(any());
+    }
+
+    @Test
+    void eliminarInventario_conIdExistente_llamaDeleteById() {
+        when(inventarioRepository.existsById(1L)).thenReturn(true);
+
+        inventarioService.eliminarInventario(1L);
+
+        verify(inventarioRepository).deleteById(1L);
+    }
+
+    @Test
+    void eliminarInventario_conIdInexistente_lanzaRecursoNoEncontradoException() {
+        when(inventarioRepository.existsById(99L)).thenReturn(false);
+
+        assertThrows(RecursoNoEncontradoException.class,
+                () -> inventarioService.eliminarInventario(99L));
+        verify(inventarioRepository, never()).deleteById(any());
+    }
+
+    @Test
+    void listarProveedores_retornaListaMapeada() {
+        Proveedor proveedor = new Proveedor();
+        proveedor.setId(1L);
+        proveedor.setNombre("EcoDistribuidora SpA");
+        proveedor.setContacto("Maria Lopez");
+        proveedor.setEmail("ventas@eco.cl");
+        proveedor.setTelefono("+56 2 2345 6789");
+        when(proveedorRepository.findAll()).thenReturn(List.of(proveedor));
+
+        List<ProveedorDTO> result = inventarioService.listarProveedores();
+
+        assertEquals(1, result.size());
+        assertEquals("EcoDistribuidora SpA", result.get(0).getNombre());
+        assertEquals("ventas@eco.cl", result.get(0).getEmail());
+    }
+
+    @Test
+    void actualizarStock_conInventarioInexistente_lanzaRecursoNoEncontradoException() {
+        when(inventarioRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(RecursoNoEncontradoException.class,
+                () -> inventarioService.actualizarStock(99L, 10));
     }
 }

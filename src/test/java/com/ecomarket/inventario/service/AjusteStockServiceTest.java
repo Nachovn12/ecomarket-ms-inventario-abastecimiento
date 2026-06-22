@@ -2,6 +2,7 @@ package com.ecomarket.inventario.service;
 
 import com.ecomarket.inventario.dto.AjusteStockRequestDTO;
 import com.ecomarket.inventario.dto.AjusteStockResponseDTO;
+import com.ecomarket.inventario.exception.RecursoNoEncontradoException;
 import com.ecomarket.inventario.exception.ReglaDeNegocioException;
 import com.ecomarket.inventario.model.AjusteStock;
 import com.ecomarket.inventario.model.Producto;
@@ -13,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -63,11 +65,10 @@ class AjusteStockServiceTest {
         return dto;
     }
 
-    // AC-5: Ajuste con motivo MERMA → registra movimiento negativo en historial
     @Test
     void ajustarStock_conMotivoMerma_registraMovimientoNegativo() {
         Producto producto = buildProducto(50, 5);
-        AjusteStockRequestDTO dto = buildDTO(30, "MERMA"); // 30 < 50 → movimiento negativo; 30 >= 5 mínimo
+        AjusteStockRequestDTO dto = buildDTO(30, "MERMA");
 
         AjusteStock ajuste = buildAjuste(producto, 50, 30, "MERMA");
 
@@ -84,11 +85,10 @@ class AjusteStockServiceTest {
         verify(ajusteStockRepository).save(any(AjusteStock.class));
     }
 
-    // AC-5: Ajuste con motivo RECEPCION_COMPRA → registra movimiento positivo en historial
     @Test
     void ajustarStock_conMotivoRecepcionCompra_registraMovimientoPositivo() {
         Producto producto = buildProducto(20, 5);
-        AjusteStockRequestDTO dto = buildDTO(80, "RECEPCION_COMPRA"); // 80 > 20 → movimiento positivo
+        AjusteStockRequestDTO dto = buildDTO(80, "RECEPCION_COMPRA");
 
         AjusteStock ajuste = buildAjuste(producto, 20, 80, "RECEPCION_COMPRA");
 
@@ -104,7 +104,6 @@ class AjusteStockServiceTest {
                 "El ajuste por RECEPCION_COMPRA debe ser positivo (cantidadNueva > cantidadAnterior)");
     }
 
-    // AC-5: Ajuste con motivo CORRECCION_INVENTARIO → corrige stock y genera movimiento
     @Test
     void ajustarStock_conMotivoCorreccionInventario_corrigeStockYGeneraMovimiento() {
         Producto producto = buildProducto(50, 5);
@@ -124,16 +123,57 @@ class AjusteStockServiceTest {
         verify(ajusteStockRepository).save(any(AjusteStock.class));
     }
 
-    // AC-3: Ajuste que deja stock bajo mínimo → lanza excepción de negocio
     @Test
     void ajustarStock_conStockResultanteBajoMinimo_lanzaReglaDeNegocioException() {
-        Producto producto = buildProducto(50, 20); // mínimo = 20
-        AjusteStockRequestDTO dto = buildDTO(5, "MERMA"); // 5 < 20 → debe lanzar excepción
+        Producto producto = buildProducto(50, 20);
+        AjusteStockRequestDTO dto = buildDTO(5, "MERMA");
 
         when(productoRepository.findById(1L)).thenReturn(Optional.of(producto));
 
         assertThrows(ReglaDeNegocioException.class,
                 () -> ajusteStockService.ajustarStock(dto));
         verify(ajusteStockRepository, never()).save(any());
+    }
+
+    @Test
+    void ajustarStock_conProductoInexistente_lanzaRecursoNoEncontradoException() {
+        AjusteStockRequestDTO dto = buildDTO(30, "MERMA");
+        dto.setProductoId(99L);
+        when(productoRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(RecursoNoEncontradoException.class,
+                () -> ajusteStockService.ajustarStock(dto));
+        verify(ajusteStockRepository, never()).save(any());
+    }
+
+    @Test
+    void obtenerHistorialPorProducto_retornaListaDelRepository() {
+        Producto producto = buildProducto(50, 5);
+        AjusteStock ajuste1 = buildAjuste(producto, 50, 30, "MERMA");
+        AjusteStock ajuste2 = buildAjuste(producto, 30, 80, "RECEPCION_COMPRA");
+        ajuste2.setId(2L);
+
+        when(ajusteStockRepository.findByProductoId(1L)).thenReturn(List.of(ajuste1, ajuste2));
+
+        List<AjusteStockResponseDTO> result = ajusteStockService.obtenerHistorialPorProducto(1L);
+
+        assertEquals(2, result.size());
+        assertEquals("MERMA", result.get(0).getMotivo());
+        assertEquals("RECEPCION_COMPRA", result.get(1).getMotivo());
+        verify(ajusteStockRepository).findByProductoId(1L);
+    }
+
+    @Test
+    void listarAjustes_retornaListaCompleta() {
+        Producto producto = buildProducto(50, 5);
+        AjusteStock ajuste = buildAjuste(producto, 50, 30, "MERMA");
+
+        when(ajusteStockRepository.findAll()).thenReturn(List.of(ajuste));
+
+        List<AjusteStockResponseDTO> result = ajusteStockService.listarAjustes();
+
+        assertEquals(1, result.size());
+        assertEquals(1L, result.get(0).getId());
+        verify(ajusteStockRepository).findAll();
     }
 }

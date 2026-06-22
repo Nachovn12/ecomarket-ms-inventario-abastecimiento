@@ -2,6 +2,7 @@ package com.ecomarket.inventario.controller;
 
 import com.ecomarket.inventario.dto.PedidoReabastecimientoRequestDTO;
 import com.ecomarket.inventario.dto.PedidoReabastecimientoResponseDTO;
+import com.ecomarket.inventario.exception.RecursoNoEncontradoException;
 import com.ecomarket.inventario.service.PedidoReabastecimientoService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -15,14 +16,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-/**
- * Tests del controller de abastecimiento (pedidos de reabastecimiento).
- * Mapea a PedidoReabastecimientoController (AC-2, AC-7).
- */
 @WebMvcTest(PedidoReabastecimientoController.class)
 @TestPropertySource(properties = {
         "springdoc.api-docs.enabled=false",
@@ -49,7 +47,6 @@ class AbastecimientoControllerTest {
         return dto;
     }
 
-    // AC-2: GET /api/inventario/pedidos-reabastecimiento → 200 + _links.self presente
     @Test
     void getPedidos_retorna200ConLinksHateoas() throws Exception {
         PedidoReabastecimientoResponseDTO dto = buildResponse(1L, 1L, 100, "PENDIENTE");
@@ -61,7 +58,6 @@ class AbastecimientoControllerTest {
                 .andExpect(jsonPath("$._embedded").exists());
     }
 
-    // AC-2: GET /api/inventario/pedidos-reabastecimiento/{id} → 200 + _links.self presente
     @Test
     void getPedido_conIdValido_retorna200ConSelfLink() throws Exception {
         PedidoReabastecimientoResponseDTO dto = buildResponse(1L, 1L, 100, "PENDIENTE");
@@ -74,7 +70,6 @@ class AbastecimientoControllerTest {
                 .andExpect(jsonPath("$._links.self").exists());
     }
 
-    // AC-7: POST /api/inventario/pedidos-reabastecimiento con body válido → 201 + _links.self
     @Test
     void postPedido_conBodyValido_retorna201ConSelfLink() throws Exception {
         PedidoReabastecimientoRequestDTO request = new PedidoReabastecimientoRequestDTO();
@@ -93,15 +88,64 @@ class AbastecimientoControllerTest {
                 .andExpect(jsonPath("$._links.self").exists());
     }
 
-    // AC-2: POST con body inválido (falta creadoPor @NotBlank) → 400
     @Test
     void postPedido_conBodyInvalido_retorna400() throws Exception {
-        // Falta creadoPor (@NotBlank)
         String invalidBody = "{\"productoId\":1,\"cantidad\":100}";
 
         mockMvc.perform(post("/api/inventario/pedidos-reabastecimiento")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(invalidBody))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void aprobarPedido_conIdValido_retorna200ConEstadoAprobado() throws Exception {
+        PedidoReabastecimientoResponseDTO response = buildResponse(1L, 1L, 100, "APROBADO");
+        when(pedidoService.aprobarPedido(1L)).thenReturn(response);
+
+        mockMvc.perform(put("/api/inventario/pedidos-reabastecimiento/1/aprobar"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estado").value("APROBADO"))
+                .andExpect(jsonPath("$._links.self").exists());
+    }
+
+    @Test
+    void aprobarPedido_conIdInexistente_retorna404() throws Exception {
+        when(pedidoService.aprobarPedido(99L))
+                .thenThrow(new RecursoNoEncontradoException("Pedido no encontrado con id: 99"));
+
+        mockMvc.perform(put("/api/inventario/pedidos-reabastecimiento/99/aprobar"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void rechazarPedido_conMotivoValido_retorna200ConEstadoRechazado() throws Exception {
+        PedidoReabastecimientoResponseDTO response = buildResponse(1L, 1L, 100, "RECHAZADO");
+        response.setMotivoRechazo("Stock suficiente");
+        when(pedidoService.rechazarPedido(eq(1L), eq("Stock suficiente"))).thenReturn(response);
+
+        mockMvc.perform(put("/api/inventario/pedidos-reabastecimiento/1/rechazar")
+                        .param("motivo", "Stock suficiente"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estado").value("RECHAZADO"));
+    }
+
+    @Test
+    void rechazarPedido_conIdInexistente_retorna404() throws Exception {
+        when(pedidoService.rechazarPedido(eq(99L), any(String.class)))
+                .thenThrow(new RecursoNoEncontradoException("Pedido no encontrado"));
+
+        mockMvc.perform(put("/api/inventario/pedidos-reabastecimiento/99/rechazar")
+                        .param("motivo", "sin stock"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getPedidos_listaVacia_retorna200ConCollectionVacia() throws Exception {
+        when(pedidoService.listarPedidos()).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/inventario/pedidos-reabastecimiento"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$._links.self").exists());
     }
 }

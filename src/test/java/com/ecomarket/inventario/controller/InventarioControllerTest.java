@@ -2,6 +2,8 @@ package com.ecomarket.inventario.controller;
 
 import com.ecomarket.inventario.dto.InventarioRequestDTO;
 import com.ecomarket.inventario.dto.InventarioResponseDTO;
+import com.ecomarket.inventario.dto.ProveedorDTO;
+import com.ecomarket.inventario.exception.RecursoNoEncontradoException;
 import com.ecomarket.inventario.service.InventarioService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -15,6 +17,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -44,7 +49,6 @@ class InventarioControllerTest {
         return dto;
     }
 
-    // AC-2: GET /api/inventario → 200 + listado presente
     @Test
     void getInventarios_retorna200ConListado() throws Exception {
         InventarioResponseDTO dto = buildResponse(1L, "Bolsa Biodegradable", 100, 10);
@@ -56,7 +60,6 @@ class InventarioControllerTest {
                 .andExpect(jsonPath("$[0].cantidadDisponible").value(100));
     }
 
-    // AC-2: GET /api/inventario/{id} → 200 + datos del inventario
     @Test
     void getInventario_conIdValido_retorna200ConDTO() throws Exception {
         InventarioResponseDTO dto = buildResponse(1L, "Bolsa Biodegradable", 100, 10);
@@ -69,7 +72,6 @@ class InventarioControllerTest {
                 .andExpect(jsonPath("$.cantidadDisponible").value(100));
     }
 
-    // AC-7: POST /api/inventario con body válido → 201
     @Test
     void postInventario_conBodyValido_retorna201() throws Exception {
         InventarioRequestDTO request = new InventarioRequestDTO();
@@ -89,15 +91,73 @@ class InventarioControllerTest {
                 .andExpect(jsonPath("$.nombreProducto").value("Bolsa Biodegradable"));
     }
 
-    // AC-2: POST /api/inventario con body inválido (campo requerido vacío) → 400
     @Test
     void postInventario_conBodyInvalido_retorna400() throws Exception {
-        // Falta nombreProducto (@NotBlank)
         String invalidBody = "{\"cantidadDisponible\":100,\"cantidadMinima\":10,\"categoria\":\"Biodegradables\"}";
 
         mockMvc.perform(post("/api/inventario")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(invalidBody))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void putStock_conDatosValidos_retorna200() throws Exception {
+        InventarioResponseDTO response = buildResponse(1L, "Bolsa Biodegradable", 80, 10);
+        when(inventarioService.actualizarStock(eq(1L), eq(80))).thenReturn(response);
+
+        mockMvc.perform(put("/api/inventario/1/stock")
+                        .param("cantidad", "80"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cantidadDisponible").value(80));
+    }
+
+    @Test
+    void putStock_conCantidadNegativa_retorna400() throws Exception {
+        when(inventarioService.actualizarStock(eq(1L), eq(-5)))
+                .thenThrow(new IllegalArgumentException("La cantidad de stock no puede ser negativa"));
+
+        mockMvc.perform(put("/api/inventario/1/stock")
+                        .param("cantidad", "-5"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void deleteInventario_conIdExistente_retorna204() throws Exception {
+        doNothing().when(inventarioService).eliminarInventario(1L);
+
+        mockMvc.perform(delete("/api/inventario/1"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void deleteInventario_conIdInexistente_retorna404() throws Exception {
+        doThrow(new RecursoNoEncontradoException("no encontrado"))
+                .when(inventarioService).eliminarInventario(99L);
+
+        mockMvc.perform(delete("/api/inventario/99"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getProveedores_retorna200ConListado() throws Exception {
+        ProveedorDTO proveedor = new ProveedorDTO();
+        proveedor.setId(1L);
+        proveedor.setNombre("EcoDistribuidora SpA");
+        proveedor.setEmail("ventas@eco.cl");
+        when(inventarioService.listarProveedores()).thenReturn(List.of(proveedor));
+
+        mockMvc.perform(get("/api/inventario/proveedores"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].nombre").value("EcoDistribuidora SpA"));
+    }
+
+    @Test
+    void getInventarios_listaVacia_retorna200() throws Exception {
+        when(inventarioService.listarInventarios()).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/inventario"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
     }
 }

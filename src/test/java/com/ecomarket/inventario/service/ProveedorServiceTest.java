@@ -15,16 +15,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/**
- * Tests del servicio de recepción de mercancía (gestión de abastecimiento desde proveedores).
- * Mapea a RecepcionMercanciaService.
- */
 @ExtendWith(MockitoExtension.class)
 class ProveedorServiceTest {
 
@@ -73,7 +70,6 @@ class ProveedorServiceTest {
         return r;
     }
 
-    // Alta de recepción → persiste y retorna DTO con datos completos
     @Test
     void registrarRecepcion_conDatosValidos_persisteYRetornaDTO() {
         Producto producto = buildProducto();
@@ -103,7 +99,6 @@ class ProveedorServiceTest {
         verify(recepcionRepository).save(any(RecepcionMercancia.class));
     }
 
-    // Evaluación de desempeño: recepción con daños → estado CON_DANOS
     @Test
     void registrarRecepcion_conMercanciaConDanos_retornaEstadoConDanos() {
         Producto producto = buildProducto();
@@ -130,7 +125,6 @@ class ProveedorServiceTest {
         assertEquals(10, result.getCantidadDanada());
     }
 
-    // Proveedor/Pedido inexistente → lanza RecursoNoEncontradoException
     @Test
     void registrarRecepcion_conPedidoInexistente_lanzaRecursoNoEncontradoException() {
         RecepcionMercanciaRequestDTO dto = new RecepcionMercanciaRequestDTO();
@@ -143,5 +137,168 @@ class ProveedorServiceTest {
         assertThrows(RecursoNoEncontradoException.class,
                 () -> recepcionMercanciaService.registrarRecepcion(dto));
         verify(recepcionRepository, never()).save(any());
+    }
+
+    @Test
+    void registrarRecepcion_conPedidoNoAprobado_lanzaIllegalArgumentException() {
+        Producto producto = buildProducto();
+        PedidoReabastecimiento pedido = buildPedidoAprobado(producto, 100);
+        pedido.setEstado(PedidoReabastecimiento.Estado.PENDIENTE);
+
+        RecepcionMercanciaRequestDTO dto = new RecepcionMercanciaRequestDTO();
+        dto.setPedidoId(1L);
+        dto.setCantidadRecibida(100);
+        dto.setRegistradoPor("recepcionista1");
+
+        when(pedidoRepository.findById(1L)).thenReturn(Optional.of(pedido));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> recepcionMercanciaService.registrarRecepcion(dto));
+        verify(recepcionRepository, never()).save(any());
+    }
+
+    @Test
+    void registrarRecepcion_conCantidadRecibidaNula_lanzaIllegalArgumentException() {
+        Producto producto = buildProducto();
+        PedidoReabastecimiento pedido = buildPedidoAprobado(producto, 100);
+
+        RecepcionMercanciaRequestDTO dto = new RecepcionMercanciaRequestDTO();
+        dto.setPedidoId(1L);
+        dto.setCantidadRecibida(null);
+        dto.setRegistradoPor("recepcionista1");
+
+        when(pedidoRepository.findById(1L)).thenReturn(Optional.of(pedido));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> recepcionMercanciaService.registrarRecepcion(dto));
+    }
+
+    @Test
+    void registrarRecepcion_conCantidadRecibidaCero_lanzaIllegalArgumentException() {
+        Producto producto = buildProducto();
+        PedidoReabastecimiento pedido = buildPedidoAprobado(producto, 100);
+
+        RecepcionMercanciaRequestDTO dto = new RecepcionMercanciaRequestDTO();
+        dto.setPedidoId(1L);
+        dto.setCantidadRecibida(0);
+        dto.setRegistradoPor("recepcionista1");
+
+        when(pedidoRepository.findById(1L)).thenReturn(Optional.of(pedido));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> recepcionMercanciaService.registrarRecepcion(dto));
+    }
+
+    @Test
+    void registrarRecepcion_conCantidadDanadaNegativa_lanzaIllegalArgumentException() {
+        Producto producto = buildProducto();
+        PedidoReabastecimiento pedido = buildPedidoAprobado(producto, 100);
+
+        RecepcionMercanciaRequestDTO dto = new RecepcionMercanciaRequestDTO();
+        dto.setPedidoId(1L);
+        dto.setCantidadRecibida(100);
+        dto.setCantidadDanada(-1);
+        dto.setRegistradoPor("recepcionista1");
+
+        when(pedidoRepository.findById(1L)).thenReturn(Optional.of(pedido));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> recepcionMercanciaService.registrarRecepcion(dto));
+    }
+
+    @Test
+    void registrarRecepcion_conCantidadDanadaMayorQueRecibida_lanzaIllegalArgumentException() {
+        Producto producto = buildProducto();
+        PedidoReabastecimiento pedido = buildPedidoAprobado(producto, 100);
+
+        RecepcionMercanciaRequestDTO dto = new RecepcionMercanciaRequestDTO();
+        dto.setPedidoId(1L);
+        dto.setCantidadRecibida(50);
+        dto.setCantidadDanada(60);
+        dto.setRegistradoPor("recepcionista1");
+
+        when(pedidoRepository.findById(1L)).thenReturn(Optional.of(pedido));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> recepcionMercanciaService.registrarRecepcion(dto));
+    }
+
+    @Test
+    void registrarRecepcion_conCantidadDiferenteAlPedido_retornaEstadoConDiferencias() {
+        Producto producto = buildProducto();
+        PedidoReabastecimiento pedido = buildPedidoAprobado(producto, 100);
+
+        RecepcionMercanciaRequestDTO dto = new RecepcionMercanciaRequestDTO();
+        dto.setPedidoId(1L);
+        dto.setCantidadRecibida(80);
+        dto.setCantidadDanada(0);
+        dto.setRegistradoPor("recepcionista1");
+
+        RecepcionMercancia guardada = buildRecepcion(pedido, 80, 0,
+                RecepcionMercancia.EstadoRecepcion.CON_DIFERENCIAS);
+
+        when(pedidoRepository.findById(1L)).thenReturn(Optional.of(pedido));
+        when(productoRepository.save(any(Producto.class))).thenReturn(producto);
+        when(pedidoRepository.save(any(PedidoReabastecimiento.class))).thenReturn(pedido);
+        when(recepcionRepository.save(any(RecepcionMercancia.class))).thenReturn(guardada);
+
+        RecepcionMercanciaResponseDTO result =
+                recepcionMercanciaService.registrarRecepcion(dto);
+
+        assertEquals("CON_DIFERENCIAS", result.getEstado());
+    }
+
+    @Test
+    void registrarRecepcion_conTodaDanada_noActualizaStock() {
+        Producto producto = buildProducto();
+        PedidoReabastecimiento pedido = buildPedidoAprobado(producto, 100);
+
+        RecepcionMercanciaRequestDTO dto = new RecepcionMercanciaRequestDTO();
+        dto.setPedidoId(1L);
+        dto.setCantidadRecibida(50);
+        dto.setCantidadDanada(50);
+        dto.setRegistradoPor("recepcionista1");
+
+        RecepcionMercancia guardada = buildRecepcion(pedido, 50, 50,
+                RecepcionMercancia.EstadoRecepcion.CON_DANOS);
+
+        when(pedidoRepository.findById(1L)).thenReturn(Optional.of(pedido));
+        when(pedidoRepository.save(any(PedidoReabastecimiento.class))).thenReturn(pedido);
+        when(recepcionRepository.save(any(RecepcionMercancia.class))).thenReturn(guardada);
+
+        recepcionMercanciaService.registrarRecepcion(dto);
+
+        verify(productoRepository, never()).save(any());
+    }
+
+    @Test
+    void listarRecepciones_retornaListaCompleta() {
+        Producto producto = buildProducto();
+        PedidoReabastecimiento pedido = buildPedidoAprobado(producto, 100);
+        RecepcionMercancia r1 = buildRecepcion(pedido, 100, 0, RecepcionMercancia.EstadoRecepcion.CONFORME);
+        RecepcionMercancia r2 = buildRecepcion(pedido, 50, 5, RecepcionMercancia.EstadoRecepcion.CON_DANOS);
+        r2.setId(2L);
+
+        when(recepcionRepository.findAll()).thenReturn(List.of(r1, r2));
+
+        List<RecepcionMercanciaResponseDTO> result = recepcionMercanciaService.listarRecepciones();
+
+        assertEquals(2, result.size());
+        verify(recepcionRepository).findAll();
+    }
+
+    @Test
+    void obtenerPorPedido_retornaListaDelPedido() {
+        Producto producto = buildProducto();
+        PedidoReabastecimiento pedido = buildPedidoAprobado(producto, 100);
+        RecepcionMercancia r = buildRecepcion(pedido, 100, 0, RecepcionMercancia.EstadoRecepcion.CONFORME);
+
+        when(recepcionRepository.findByPedidoId(1L)).thenReturn(List.of(r));
+
+        List<RecepcionMercanciaResponseDTO> result = recepcionMercanciaService.obtenerPorPedido(1L);
+
+        assertEquals(1, result.size());
+        assertEquals(1L, result.get(0).getPedidoId());
+        verify(recepcionRepository).findByPedidoId(1L);
     }
 }
