@@ -17,10 +17,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/**
- * Manejador centralizado de excepciones para ms-inventario-abastecimiento.
- * Retorna respuestas JSON estructuradas con timestamp, status, error, message y path.
- */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -68,6 +64,7 @@ public class GlobalExceptionHandler {
         body.put("validaciones", errores);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
+
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<Map<String, Object>> handleDataIntegrity(DataIntegrityViolationException ex,
                                                                    HttpServletRequest req) {

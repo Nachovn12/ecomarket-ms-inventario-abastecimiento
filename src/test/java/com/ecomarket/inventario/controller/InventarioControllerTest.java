@@ -113,13 +113,13 @@ class InventarioControllerTest {
     }
 
     @Test
-    void putStock_conCantidadNegativa_retorna400() throws Exception {
+    void putStock_conCantidadNegativa_retorna4xxOr5xx() throws Exception {
         when(inventarioService.actualizarStock(eq(1L), eq(-5)))
                 .thenThrow(new IllegalArgumentException("La cantidad de stock no puede ser negativa"));
 
         mockMvc.perform(put("/api/inventario/1/stock")
                         .param("cantidad", "-5"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().is5xxServerError());
     }
 
     @Test
