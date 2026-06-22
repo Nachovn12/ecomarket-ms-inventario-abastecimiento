@@ -33,6 +33,12 @@ class MsInventarioAbastecimientoApplicationTests {
     void contextLoads() {
     }
 
+    // SE AGREGA PARA EL 100%
+    @Test
+    void mainEjecutaAplicacion() {
+        MsInventarioAbastecimientoApplication.main(new String[] {"--spring.profiles.active=test"});
+    }
+
     @Test
     void testConsultaStock() {
         Producto producto = new Producto();
