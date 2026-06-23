@@ -12,16 +12,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.CollectionModel;
-import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
-
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 @RestController
 @RequestMapping("/api/inventario/ajustes-stock")
@@ -40,58 +35,24 @@ public class AjusteStockController {
             @ApiResponse(responseCode = "404", description = "Producto no encontrado", content = @Content)
     })
     @PostMapping
-    public ResponseEntity<EntityModel<AjusteStockResponseDTO>> ajustarStock(
-            @Valid @RequestBody AjusteStockRequestDTO dto) {
-
-        AjusteStockResponseDTO response = ajusteStockService.ajustarStock(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(toModel(response));
+    public ResponseEntity<AjusteStockResponseDTO> ajustarStock(@Valid @RequestBody AjusteStockRequestDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(ajusteStockService.ajustarStock(dto));
     }
 
     @Operation(summary = "Obtener historial de ajustes por producto")
     @ApiResponse(responseCode = "200", description = "Historial encontrado",
             content = @Content(schema = @Schema(implementation = AjusteStockResponseDTO.class)))
     @GetMapping("/producto/{productoId}")
-    public ResponseEntity<CollectionModel<EntityModel<AjusteStockResponseDTO>>> obtenerHistorial(
+    public ResponseEntity<List<AjusteStockResponseDTO>> obtenerHistorial(
             @Parameter(description = "ID del producto", example = "1", required = true) @PathVariable Long productoId) {
-
-        List<EntityModel<AjusteStockResponseDTO>> ajustes = ajusteStockService.obtenerHistorialPorProducto(productoId)
-                .stream()
-                .map(this::toModel)
-                .collect(Collectors.toList());
-
-        CollectionModel<EntityModel<AjusteStockResponseDTO>> collection = CollectionModel.of(ajustes);
-        collection.add(linkTo(methodOn(AjusteStockController.class).obtenerHistorial(productoId)).withSelfRel());
-        collection.add(linkTo(methodOn(AjusteStockController.class).listarAjustes()).withRel("ajustes-stock"));
-
-        return ResponseEntity.ok(collection);
+        return ResponseEntity.ok(ajusteStockService.obtenerHistorialPorProducto(productoId));
     }
 
     @Operation(summary = "Listar todos los ajustes de stock")
     @ApiResponse(responseCode = "200", description = "Listado de ajustes",
             content = @Content(schema = @Schema(implementation = AjusteStockResponseDTO.class)))
     @GetMapping
-    public ResponseEntity<CollectionModel<EntityModel<AjusteStockResponseDTO>>> listarAjustes() {
-        List<EntityModel<AjusteStockResponseDTO>> ajustes = ajusteStockService.listarAjustes()
-                .stream()
-                .map(this::toModel)
-                .collect(Collectors.toList());
-
-        CollectionModel<EntityModel<AjusteStockResponseDTO>> collection = CollectionModel.of(ajustes);
-        collection.add(linkTo(methodOn(AjusteStockController.class).listarAjustes()).withSelfRel());
-
-        return ResponseEntity.ok(collection);
-    }
-
-    private EntityModel<AjusteStockResponseDTO> toModel(AjusteStockResponseDTO ajuste) {
-        EntityModel<AjusteStockResponseDTO> model = EntityModel.of(ajuste);
-
-        model.add(linkTo(methodOn(AjusteStockController.class).listarAjustes()).withRel("ajustes-stock"));
-
-        if (ajuste.getProductoId() != null) {
-            model.add(linkTo(methodOn(AjusteStockController.class)
-                    .obtenerHistorial(ajuste.getProductoId())).withRel("historial-producto"));
-        }
-
-        return model;
+    public ResponseEntity<List<AjusteStockResponseDTO>> listarAjustes() {
+        return ResponseEntity.ok(ajusteStockService.listarAjustes());
     }
 }

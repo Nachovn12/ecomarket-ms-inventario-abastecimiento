@@ -12,16 +12,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.hateoas.CollectionModel;
-import org.springframework.hateoas.EntityModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
-
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 
 @RestController
 @RequestMapping("/api/inventario/productos")
@@ -40,26 +35,16 @@ public class ProductoController {
             @ApiResponse(responseCode = "409", description = "SKU duplicado", content = @Content)
     })
     @PostMapping
-    public ResponseEntity<EntityModel<ProductoResponseDTO>> agregarProducto(@Valid @RequestBody ProductoRequestDTO dto) {
-        ProductoResponseDTO response = productoService.agregarProducto(dto);
-        EntityModel<ProductoResponseDTO> model = EntityModel.of(response,
-                linkTo(methodOn(ProductoController.class).obtenerProducto(response.getId())).withSelfRel(),
-                linkTo(methodOn(ProductoController.class).listarProductos()).withRel("productos"));
-        return ResponseEntity.status(HttpStatus.CREATED).body(model);
+    public ResponseEntity<ProductoResponseDTO> agregarProducto(@Valid @RequestBody ProductoRequestDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(productoService.agregarProducto(dto));
     }
 
     @Operation(summary = "Listar todos los productos del inventario")
     @ApiResponse(responseCode = "200", description = "Listado de productos",
             content = @Content(schema = @Schema(implementation = ProductoResponseDTO.class)))
     @GetMapping
-    public ResponseEntity<CollectionModel<EntityModel<ProductoResponseDTO>>> listarProductos() {
-        List<EntityModel<ProductoResponseDTO>> productos = productoService.listarProductos()
-                .stream()
-                .map(p -> EntityModel.of(p,
-                        linkTo(methodOn(ProductoController.class).obtenerProducto(p.getId())).withSelfRel()))
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(CollectionModel.of(productos,
-                linkTo(methodOn(ProductoController.class).listarProductos()).withSelfRel()));
+    public ResponseEntity<List<ProductoResponseDTO>> listarProductos() {
+        return ResponseEntity.ok(productoService.listarProductos());
     }
 
     @Operation(summary = "Obtener un producto de inventario por ID")
@@ -69,13 +54,9 @@ public class ProductoController {
             @ApiResponse(responseCode = "404", description = "Producto no encontrado", content = @Content)
     })
     @GetMapping("/{id}")
-    public ResponseEntity<EntityModel<ProductoResponseDTO>> obtenerProducto(
+    public ResponseEntity<ProductoResponseDTO> obtenerProducto(
             @Parameter(description = "ID del producto", example = "1", required = true) @PathVariable Long id) {
-        ProductoResponseDTO response = productoService.obtenerProducto(id);
-        EntityModel<ProductoResponseDTO> model = EntityModel.of(response,
-                linkTo(methodOn(ProductoController.class).obtenerProducto(id)).withSelfRel(),
-                linkTo(methodOn(ProductoController.class).listarProductos()).withRel("productos"));
-        return ResponseEntity.ok(model);
+        return ResponseEntity.ok(productoService.obtenerProducto(id));
     }
 
     @Operation(summary = "Obtener un producto por su SKU")
@@ -85,13 +66,9 @@ public class ProductoController {
             @ApiResponse(responseCode = "404", description = "Producto no encontrado", content = @Content)
     })
     @GetMapping("/sku/{sku}")
-    public ResponseEntity<EntityModel<ProductoResponseDTO>> obtenerPorSku(
+    public ResponseEntity<ProductoResponseDTO> obtenerPorSku(
             @Parameter(description = "SKU del producto", example = "ECO-001", required = true) @PathVariable String sku) {
-        ProductoResponseDTO response = productoService.obtenerPorSku(sku);
-        EntityModel<ProductoResponseDTO> model = EntityModel.of(response,
-                linkTo(methodOn(ProductoController.class).obtenerPorSku(sku)).withSelfRel(),
-                linkTo(methodOn(ProductoController.class).listarProductos()).withRel("productos"));
-        return ResponseEntity.ok(model);
+        return ResponseEntity.ok(productoService.obtenerPorSku(sku));
     }
 
     @Operation(summary = "Buscar productos por nombre")
@@ -133,14 +110,10 @@ public class ProductoController {
             @ApiResponse(responseCode = "409", description = "Conflicto con SKU", content = @Content)
     })
     @PutMapping("/{id}")
-    public ResponseEntity<EntityModel<ProductoResponseDTO>> actualizarProducto(
+    public ResponseEntity<ProductoResponseDTO> actualizarProducto(
             @Parameter(description = "ID del producto", example = "1", required = true) @PathVariable Long id,
             @Valid @RequestBody ProductoRequestDTO dto) {
-        ProductoResponseDTO response = productoService.actualizarProducto(id, dto);
-        EntityModel<ProductoResponseDTO> model = EntityModel.of(response,
-                linkTo(methodOn(ProductoController.class).obtenerProducto(id)).withSelfRel(),
-                linkTo(methodOn(ProductoController.class).listarProductos()).withRel("productos"));
-        return ResponseEntity.ok(model);
+        return ResponseEntity.ok(productoService.actualizarProducto(id, dto));
     }
 
     @Operation(summary = "Eliminar un producto de inventario")

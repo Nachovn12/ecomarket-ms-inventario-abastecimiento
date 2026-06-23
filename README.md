@@ -24,7 +24,7 @@ Microservicio responsable de gestionar productos de inventario, stock por tienda
 
 ## Tecnologias
 
-- Java 21
+- Java 25
 - Spring Boot
 - Spring Web
 - Spring Data JPA / Hibernate
@@ -82,10 +82,11 @@ cd .\ms-inventario-abastecimiento\
 .\mvnw.cmd test
 ```
 
-O desde la raiz:
+O entrando al directorio (recomendado):
 
 ```powershell
-mvn -f ms-inventario-abastecimiento/pom.xml clean test
+cd .\ms-inventario-abastecimiento\
+.\mvnw.cmd clean test
 ```
 
 ## Endpoints principales
