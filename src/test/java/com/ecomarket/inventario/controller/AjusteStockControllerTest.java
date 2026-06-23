@@ -101,4 +101,22 @@ class AjusteStockControllerTest {
                         .content(invalidBody))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    void postAjusteStock_conProductoIdNuloEnRespuesta_retorna201SinLinkHistorial() throws Exception {
+        AjusteStockRequestDTO request = new AjusteStockRequestDTO();
+        request.setProductoId(1L);
+        request.setCantidadNueva(50);
+        request.setMotivo("RECEPCION_COMPRA");
+        request.setUsuarioResponsable("operador1");
+
+        AjusteStockResponseDTO response = buildResponse(1L, null, 30, 50, "RECEPCION_COMPRA");
+        when(ajusteStockService.ajustarStock(any(AjusteStockRequestDTO.class))).thenReturn(response);
+
+        mockMvc.perform(post("/api/inventario/ajustes-stock")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$._links['ajustes-stock']").exists());
+    }
 }

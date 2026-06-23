@@ -301,4 +301,31 @@ class ProveedorServiceTest {
         assertEquals(1L, result.get(0).getPedidoId());
         verify(recepcionRepository).findByPedidoId(1L);
     }
+
+    @Test
+    void registrarRecepcion_conCantidadDanadaNoEspecificada_tomaCeroComoDefault() {
+        Producto producto = buildProducto();
+        PedidoReabastecimiento pedido = buildPedidoAprobado(producto, 100);
+
+        RecepcionMercanciaRequestDTO dto = new RecepcionMercanciaRequestDTO();
+        dto.setPedidoId(1L);
+        dto.setCantidadRecibida(100);
+        // cantidadDanada no seteada → null → ternario toma el branch else → 0
+        dto.setRegistradoPor("recepcionista1");
+
+        RecepcionMercancia guardada = buildRecepcion(pedido, 100, 0,
+                RecepcionMercancia.EstadoRecepcion.CONFORME);
+
+        when(pedidoRepository.findById(1L)).thenReturn(Optional.of(pedido));
+        when(productoRepository.save(any(Producto.class))).thenReturn(producto);
+        when(pedidoRepository.save(any(PedidoReabastecimiento.class))).thenReturn(pedido);
+        when(recepcionRepository.save(any(RecepcionMercancia.class))).thenReturn(guardada);
+
+        RecepcionMercanciaResponseDTO result = recepcionMercanciaService.registrarRecepcion(dto);
+
+        assertNotNull(result);
+        assertEquals("CONFORME", result.getEstado());
+        assertEquals(0, result.getCantidadDanada());
+        verify(recepcionRepository).save(any(RecepcionMercancia.class));
+    }
 }

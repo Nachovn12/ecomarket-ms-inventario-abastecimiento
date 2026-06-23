@@ -148,4 +148,22 @@ class AbastecimientoControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$._links.self").exists());
     }
+
+    @Test
+    void postPedido_conIdNuloEnRespuesta_retorna201SinLinksDeId() throws Exception {
+        PedidoReabastecimientoRequestDTO request = new PedidoReabastecimientoRequestDTO();
+        request.setProductoId(1L);
+        request.setCantidad(100);
+        request.setCreadoPor("jefeBodega");
+
+        PedidoReabastecimientoResponseDTO response = buildResponse(null, 1L, 100, "PENDIENTE");
+        when(pedidoService.crearPedido(any(PedidoReabastecimientoRequestDTO.class))).thenReturn(response);
+
+        mockMvc.perform(post("/api/inventario/pedidos-reabastecimiento")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$._links['pedidos-reabastecimiento']").exists())
+                .andExpect(jsonPath("$._links.self").doesNotExist());
+    }
 }

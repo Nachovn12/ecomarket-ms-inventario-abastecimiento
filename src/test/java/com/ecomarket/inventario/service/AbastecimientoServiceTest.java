@@ -229,4 +229,14 @@ class AbastecimientoServiceTest {
         assertEquals(2, result.size());
         verify(pedidoRepository).findAll();
     }
+
+    @Test
+    void rechazarPedido_conMotivoNulo_lanzaIllegalArgumentException() {
+        PedidoReabastecimiento pedido = buildPedidoConEstado(PedidoReabastecimiento.Estado.PENDIENTE);
+        when(pedidoRepository.findById(1L)).thenReturn(Optional.of(pedido));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> pedidoReabastecimientoService.rechazarPedido(1L, null));
+        verify(pedidoRepository, never()).save(any());
+    }
 }

@@ -176,4 +176,21 @@ class AjusteStockServiceTest {
         assertEquals(1L, result.get(0).getId());
         verify(ajusteStockRepository).findAll();
     }
+
+    @Test
+    void ajustarStock_conStockMinimoEnCero_omiteValidacionDeMinimo() {
+        Producto producto = buildProducto(50, 0);
+        AjusteStockRequestDTO dto = buildDTO(10, "CORRECCION_INVENTARIO");
+        AjusteStock ajuste = buildAjuste(producto, 50, 10, "CORRECCION_INVENTARIO");
+
+        when(productoRepository.findById(1L)).thenReturn(Optional.of(producto));
+        when(productoRepository.save(any(Producto.class))).thenReturn(producto);
+        when(ajusteStockRepository.save(any(AjusteStock.class))).thenReturn(ajuste);
+
+        AjusteStockResponseDTO result = ajusteStockService.ajustarStock(dto);
+
+        assertNotNull(result);
+        assertEquals("CORRECCION_INVENTARIO", result.getMotivo());
+        verify(ajusteStockRepository).save(any(AjusteStock.class));
+    }
 }

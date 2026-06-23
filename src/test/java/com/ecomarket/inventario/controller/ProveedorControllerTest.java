@@ -105,4 +105,22 @@ class ProveedorControllerTest {
                         .content(invalidBody))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    void postRecepcion_conPedidoIdNuloEnRespuesta_retorna201SinLinkPedido() throws Exception {
+        RecepcionMercanciaRequestDTO request = new RecepcionMercanciaRequestDTO();
+        request.setPedidoId(1L);
+        request.setCantidadRecibida(100);
+        request.setCantidadDanada(0);
+        request.setRegistradoPor("recepcionista1");
+
+        RecepcionMercanciaResponseDTO response = buildResponse(1L, null, 100, "CONFORME");
+        when(recepcionService.registrarRecepcion(any(RecepcionMercanciaRequestDTO.class))).thenReturn(response);
+
+        mockMvc.perform(post("/api/inventario/recepciones-mercancia")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$._links['recepciones-mercancia']").exists());
+    }
 }

@@ -232,4 +232,21 @@ class ProductoServiceTest {
 
         assertEquals("SIN STOCK", result.getDisponibilidad());
     }
+
+    @Test
+    void actualizarProducto_conSkuCambiadoNoExistente_actualizaSinLanzarExcepcion() {
+        Producto existente = buildProducto(1L, "Bolsa", "ECO-001", 50);
+        ProductoRequestDTO dto = buildRequestDTO("Bolsa", "ECO-999", 50);
+        Producto actualizado = buildProducto(1L, "Bolsa", "ECO-999", 50);
+
+        when(productoRepository.findById(1L)).thenReturn(Optional.of(existente));
+        when(productoRepository.existsBySku("ECO-999")).thenReturn(false);
+        when(productoRepository.save(any(Producto.class))).thenReturn(actualizado);
+
+        ProductoResponseDTO result = productoService.actualizarProducto(1L, dto);
+
+        assertNotNull(result);
+        assertEquals("ECO-999", result.getSku());
+        verify(productoRepository).save(any(Producto.class));
+    }
 }

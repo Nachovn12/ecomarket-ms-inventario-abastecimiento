@@ -202,4 +202,18 @@ class InventarioServiceTest {
         assertThrows(RecursoNoEncontradoException.class,
                 () -> inventarioService.actualizarStock(99L, 10));
     }
+
+    @Test
+    void actualizarStock_conCantidadMinimaEnCero_noEvalúaCondicionDeAlerta() {
+        Inventario inv = buildInventario(1L, 100, 0);
+        Inventario guardado = buildInventario(1L, 50, 0);
+
+        when(inventarioRepository.findById(1L)).thenReturn(Optional.of(inv));
+        when(inventarioRepository.save(any(Inventario.class))).thenReturn(guardado);
+
+        InventarioResponseDTO result = inventarioService.actualizarStock(1L, 50);
+
+        assertEquals(50, result.getCantidadDisponible());
+        verify(inventarioRepository).save(any(Inventario.class));
+    }
 }
