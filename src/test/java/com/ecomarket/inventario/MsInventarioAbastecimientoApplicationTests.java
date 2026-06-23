@@ -7,20 +7,13 @@ import com.ecomarket.inventario.repository.ProductoRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
-@TestPropertySource(properties = {
-        "spring.datasource.url=jdbc:h2:mem:inventario_test;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE",
-        "spring.datasource.driver-class-name=org.h2.Driver",
-        "spring.datasource.username=sa",
-        "spring.datasource.password=",
-        "spring.jpa.hibernate.ddl-auto=create-drop",
-        "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect",
-        "spring.sql.init.mode=never"
-})
+@ActiveProfiles("test")
 class MsInventarioAbastecimientoApplicationTests {
 
     @Autowired
@@ -31,6 +24,11 @@ class MsInventarioAbastecimientoApplicationTests {
 
     @Test
     void contextLoads() {
+    }
+
+    @Test
+    void mainEjecutaAplicacion() {
+        MsInventarioAbastecimientoApplication.main(new String[] {"--spring.profiles.active=test"});
     }
 
     @Test
