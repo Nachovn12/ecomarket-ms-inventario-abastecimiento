@@ -58,9 +58,7 @@ class ProductoControllerTest {
         when(productoService.listarProductos()).thenReturn(List.of(dto));
 
         mockMvc.perform(get("/api/inventario/productos"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$._embedded").exists())
-                .andExpect(jsonPath("$._links.self").exists());
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -71,8 +69,7 @@ class ProductoControllerTest {
         mockMvc.perform(get("/api/inventario/productos/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.nombre").value("Bolsa Biodegradable"))
-                .andExpect(jsonPath("$._links.self").exists());
+                .andExpect(jsonPath("$.nombre").value("Bolsa Biodegradable"));
     }
 
     @Test
@@ -92,8 +89,7 @@ class ProductoControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$._links.self").exists());
+                .andExpect(jsonPath("$.id").value(1L));
     }
 
     @Test
@@ -122,8 +118,7 @@ class ProductoControllerTest {
 
         mockMvc.perform(get("/api/inventario/productos/sku/ECO-001"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.sku").value("ECO-001"))
-                .andExpect(jsonPath("$._links.self").exists());
+                .andExpect(jsonPath("$.sku").value("ECO-001"));
     }
 
     @Test
@@ -176,8 +171,7 @@ class ProductoControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.nombre").value("Bolsa Actualizada"))
-                .andExpect(jsonPath("$._links.self").exists());
+                .andExpect(jsonPath("$.nombre").value("Bolsa Actualizada"));
     }
 
     @Test

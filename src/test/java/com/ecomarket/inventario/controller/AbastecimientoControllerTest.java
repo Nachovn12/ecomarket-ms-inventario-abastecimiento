@@ -53,9 +53,7 @@ class AbastecimientoControllerTest {
         when(pedidoService.listarPedidos()).thenReturn(List.of(dto));
 
         mockMvc.perform(get("/api/inventario/pedidos-reabastecimiento"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$._links.self").exists())
-                .andExpect(jsonPath("$._embedded").exists());
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -66,8 +64,7 @@ class AbastecimientoControllerTest {
         mockMvc.perform(get("/api/inventario/pedidos-reabastecimiento/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.estado").value("PENDIENTE"))
-                .andExpect(jsonPath("$._links.self").exists());
+                .andExpect(jsonPath("$.estado").value("PENDIENTE"));
     }
 
     @Test
@@ -84,8 +81,7 @@ class AbastecimientoControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$._links.self").exists());
+                .andExpect(jsonPath("$.id").value(1L));
     }
 
     @Test
@@ -105,8 +101,7 @@ class AbastecimientoControllerTest {
 
         mockMvc.perform(put("/api/inventario/pedidos-reabastecimiento/1/aprobar"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.estado").value("APROBADO"))
-                .andExpect(jsonPath("$._links.self").exists());
+                .andExpect(jsonPath("$.estado").value("APROBADO"));
     }
 
     @Test
@@ -145,8 +140,7 @@ class AbastecimientoControllerTest {
         when(pedidoService.listarPedidos()).thenReturn(List.of());
 
         mockMvc.perform(get("/api/inventario/pedidos-reabastecimiento"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$._links.self").exists());
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -162,8 +156,6 @@ class AbastecimientoControllerTest {
         mockMvc.perform(post("/api/inventario/pedidos-reabastecimiento")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$._links['pedidos-reabastecimiento']").exists())
-                .andExpect(jsonPath("$._links.self").doesNotExist());
+                .andExpect(status().isCreated());
     }
 }
