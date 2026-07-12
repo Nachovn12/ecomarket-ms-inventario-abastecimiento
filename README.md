@@ -1,12 +1,12 @@
 # MS Inventario y Abastecimiento
 
-Microservicio responsable de gestionar productos de inventario, stock por tienda, ajustes, pedidos de reabastecimiento y recepcion de mercancia para EcoMarket SPA.
+Microservicio responsable de gestionar productos de inventario, stock por tienda, ajustes manuales, pedidos de reabastecimiento y recepcion de mercancia para EcoMarket SPA.
 
 ## Responsable
 
 | Campo                 | Detalle                                |
 | --------------------- | -------------------------------------- |
-| Responsable principal | Benjamín Palma                         |
+| Responsable principal | Benjamin Palma                         |
 | Rama de trabajo       | `feature/ms-inventario-abastecimiento` |
 | Base de datos         | `bd_inventario`                        |
 | Puerto local          | `8085`                                 |
@@ -18,19 +18,22 @@ Microservicio responsable de gestionar productos de inventario, stock por tienda
 - Consulta stock por producto, SKU, nombre, categoria o sucursal.
 - Administra registros de inventario por tienda.
 - Realiza ajustes manuales de stock con motivo.
-- Gestiona pedidos de reabastecimiento.
-- Registra recepciones de mercancia y actualiza stock.
-- Expone respuestas REST con validaciones, manejo de errores.
+- Gestiona pedidos de reabastecimiento (crear, aprobar, rechazar).
+- Registra recepciones de mercancia e incrementa stock automaticamente.
+- Expone respuestas REST con validaciones y manejo global de errores.
 
 ## Tecnologias
 
 - Java 25
-- Spring Boot
-- Spring Web
+- Spring Boot 4.0.6
+- Spring Web MVC
 - Spring Data JPA / Hibernate
 - MySQL
+- Lombok
+- Swagger UI
+- Spring Actuator
 - Maven
-- JUnit
+- JUnit + JaCoCo
 
 ## Estructura CSR
 
@@ -42,23 +45,19 @@ Microservicio responsable de gestionar productos de inventario, stock por tienda
 
 ## Configuracion
 
-El archivo principal de configuracion esta en:
-
 ```text
 src/main/resources/application.properties
 ```
 
-Valores principales:
-
 ```properties
 spring.application.name=ms-inventario-abastecimiento
 server.port=8085
-spring.datasource.url=${INVENTARIO_DB_URL:jdbc:mysql://localhost:3306/bd_inventario?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Santiago}
+spring.datasource.url=${INVENTARIO_DB_URL:jdbc:mysql://localhost:3306/bd_inventario}
 spring.datasource.username=${DB_USER:root}
 spring.datasource.password=${DB_PASSWORD:}
 ```
 
-Antes de ejecutar, crear o verificar la base de datos:
+Crear la base de datos antes de ejecutar:
 
 ```sql
 CREATE DATABASE IF NOT EXISTS bd_inventario
@@ -67,8 +66,6 @@ COLLATE utf8mb4_unicode_ci;
 ```
 
 ## Como ejecutar
-
-Desde la raiz de este repositorio:
 
 ```powershell
 .\mvnw.cmd spring-boot:run
@@ -80,38 +77,88 @@ Desde la raiz de este repositorio:
 .\mvnw.cmd clean test
 ```
 
-## Endpoints principales
+## Reporte de cobertura JaCoCo
 
-| Metodo | Ruta                                                     | Uso                              |
-| ------ | -------------------------------------------------------- | -------------------------------- |
-| POST   | `/api/inventario/productos`                              | Crear producto de inventario     |
-| GET    | `/api/inventario/productos`                              | Listar productos                 |
-| GET    | `/api/inventario/productos/{id}`                         | Consultar producto               |
-| GET    | `/api/inventario/productos/sku/{sku}`                    | Consultar producto por SKU       |
-| GET    | `/api/inventario/productos/buscar/nombre`                | Buscar por nombre                |
-| GET    | `/api/inventario/productos/buscar/categoria`             | Buscar por categoria             |
-| GET    | `/api/inventario/productos/buscar/sucursal`              | Buscar por sucursal              |
-| PUT    | `/api/inventario/productos/{id}`                         | Actualizar producto              |
-| DELETE | `/api/inventario/productos/{id}`                         | Eliminar producto                |
-| POST   | `/api/inventario`                                        | Crear registro de inventario     |
-| GET    | `/api/inventario/{id}`                                   | Consultar inventario             |
-| PUT    | `/api/inventario/{id}/stock`                             | Actualizar stock                 |
-| POST   | `/api/inventario/ajustes-stock`                          | Registrar ajuste de stock        |
-| GET    | `/api/inventario/ajustes-stock`                          | Listar ajustes                   |
-| POST   | `/api/inventario/pedidos-reabastecimiento`               | Crear pedido de reabastecimiento |
-| PUT    | `/api/inventario/pedidos-reabastecimiento/{id}/aprobar`  | Aprobar pedido                   |
-| PUT    | `/api/inventario/pedidos-reabastecimiento/{id}/rechazar` | Rechazar pedido                  |
-| POST   | `/api/inventario/recepciones-mercancia`                  | Registrar recepcion de mercancia |
+Ejecutar el siguiente comando para generar el reporte:
+
+```powershell
+.\mvnw.cmd clean test jacoco:report
+```
+
+El reporte HTML se genera en:
+
+```text
+target/site/jacoco/index.html
+```
+
+Abrir ese archivo en el navegador para ver la cobertura de codigo por clase, metodo y linea.
+
+> **Nota:** Los puertos 8080 y 8082 estan reservados y no deben usarse. Este microservicio corre en el puerto `8085`.
+
+## Swagger UI
+
+```
+http://localhost:8085/doc/swagger-ui.html
+```
+
+## Endpoints
+
+### Inventario (Legado) — `/api/inventario`
+
+| Metodo | Ruta                        | Descripcion                          |
+| ------ | --------------------------- | ------------------------------------ |
+| POST   | `/api/inventario`           | Crear registro de inventario         |
+| GET    | `/api/inventario`           | Listar todos los registros           |
+| GET    | `/api/inventario/{id}`      | Obtener inventario por ID            |
+| PUT    | `/api/inventario/{id}/stock` | Actualizar stock (`?cantidad=N`)    |
+| DELETE | `/api/inventario/{id}`      | Eliminar registro de inventario      |
+| GET    | `/api/inventario/proveedores` | Listar proveedores del sistema     |
+
+### Productos de Inventario — `/api/inventario/productos`
+
+| Metodo | Ruta                                         | Descripcion                  |
+| ------ | -------------------------------------------- | ---------------------------- |
+| POST   | `/api/inventario/productos`                  | Agregar producto al inventario |
+| GET    | `/api/inventario/productos`                  | Listar productos             |
+| GET    | `/api/inventario/productos/{id}`             | Obtener producto por ID      |
+| GET    | `/api/inventario/productos/sku/{sku}`        | Obtener producto por SKU     |
+| GET    | `/api/inventario/productos/buscar/nombre`    | Buscar por nombre `?nombre=X` |
+| GET    | `/api/inventario/productos/buscar/categoria` | Buscar por categoria `?categoria=X` |
+| GET    | `/api/inventario/productos/buscar/sucursal`  | Buscar por sucursal `?sucursal=X` |
+| PUT    | `/api/inventario/productos/{id}`             | Actualizar producto          |
+| DELETE | `/api/inventario/productos/{id}`             | Eliminar producto            |
+
+### Ajustes de Stock — `/api/inventario/ajustes-stock`
+
+| Metodo | Ruta                                                      | Descripcion                     |
+| ------ | --------------------------------------------------------- | ------------------------------- |
+| POST   | `/api/inventario/ajustes-stock`                           | Registrar ajuste manual de stock |
+| GET    | `/api/inventario/ajustes-stock`                           | Listar todos los ajustes        |
+| GET    | `/api/inventario/ajustes-stock/producto/{productoId}`     | Historial de ajustes por producto |
+
+### Pedidos de Reabastecimiento — `/api/inventario/pedidos-reabastecimiento`
+
+| Metodo | Ruta                                                        | Descripcion                   |
+| ------ | ----------------------------------------------------------- | ----------------------------- |
+| POST   | `/api/inventario/pedidos-reabastecimiento`                  | Crear pedido de reabastecimiento |
+| GET    | `/api/inventario/pedidos-reabastecimiento`                  | Listar pedidos                |
+| GET    | `/api/inventario/pedidos-reabastecimiento/{id}`             | Obtener pedido por ID         |
+| PUT    | `/api/inventario/pedidos-reabastecimiento/{id}/aprobar`     | Aprobar pedido                |
+| PUT    | `/api/inventario/pedidos-reabastecimiento/{id}/rechazar`    | Rechazar pedido (`?motivo=X`) |
+
+### Recepciones de Mercancia — `/api/inventario/recepciones-mercancia`
+
+| Metodo | Ruta                                                      | Descripcion                       |
+| ------ | --------------------------------------------------------- | --------------------------------- |
+| POST   | `/api/inventario/recepciones-mercancia`                   | Registrar recepcion de mercancia  |
+| GET    | `/api/inventario/recepciones-mercancia`                   | Listar todas las recepciones      |
+| GET    | `/api/inventario/recepciones-mercancia/pedido/{pedidoId}` | Recepciones por pedido            |
 
 ## Ejemplo de uso
-
-Consultar productos:
 
 ```http
 GET http://localhost:8085/api/inventario/productos
 ```
-
-Consultar por SKU:
 
 ```http
 GET http://localhost:8085/api/inventario/productos/sku/ECO-001
@@ -129,7 +176,7 @@ GET http://localhost:8085/api/inventario/productos/sku/ECO-001
 
 ## Documentacion relacionada
 
-- [Evidencia build y tests](https://github.com/Nachovn12/ecomarket-spa-docs/blob/main/docs/evidencias/evidencia-build-tests.md)
+- [Evidencia Postman](https://github.com/Nachovn12/ecomarket-spa-docs/blob/main/docs/postman/evidencia-postman.md)
 - [Evidencias tecnicas](https://github.com/Nachovn12/ecomarket-spa-docs/tree/main/docs/evidencias-tecnicas)
 - [Arquitectura de microservicios](https://github.com/Nachovn12/ecomarket-spa-docs/blob/main/docs/arquitectura/arquitectura-microservicios.md)
 - [Bases de datos MySQL](https://github.com/Nachovn12/ecomarket-spa-docs/blob/main/docs/arquitectura/bases-datos-mysql.md)
