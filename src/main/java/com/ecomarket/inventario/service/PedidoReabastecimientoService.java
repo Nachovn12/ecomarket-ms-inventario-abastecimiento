@@ -2,6 +2,7 @@ package com.ecomarket.inventario.service;
 
 import com.ecomarket.inventario.dto.PedidoReabastecimientoRequestDTO;
 import com.ecomarket.inventario.dto.PedidoReabastecimientoResponseDTO;
+import com.ecomarket.inventario.exception.ConflictException;
 import com.ecomarket.inventario.exception.RecursoNoEncontradoException;
 import com.ecomarket.inventario.model.PedidoReabastecimiento;
 import com.ecomarket.inventario.model.Producto;
@@ -56,8 +57,8 @@ public class PedidoReabastecimientoService {
         PedidoReabastecimiento pedido = obtenerEntidad(id);
 
         if (pedido.getEstado() != PedidoReabastecimiento.Estado.PENDIENTE) {
-            throw new IllegalArgumentException(
-                    "Solo se pueden aprobar pedidos en estado PENDIENTE. Estado actual: " + pedido.getEstado());
+            throw new ConflictException(
+                    "El pedido no se puede aprobar en su estado actual. Estado actual: " + pedido.getEstado());
         }
 
         pedido.setEstado(PedidoReabastecimiento.Estado.APROBADO);
@@ -71,7 +72,7 @@ public class PedidoReabastecimientoService {
         PedidoReabastecimiento pedido = obtenerEntidad(id);
 
         if (pedido.getEstado() != PedidoReabastecimiento.Estado.PENDIENTE) {
-            throw new IllegalArgumentException(
+            throw new ConflictException(
                     "Solo se pueden rechazar pedidos en estado PENDIENTE. Estado actual: " + pedido.getEstado());
         }
         if (motivo == null || motivo.isBlank()) {

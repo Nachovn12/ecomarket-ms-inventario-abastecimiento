@@ -1,5 +1,6 @@
 package com.ecomarket.inventario.service;
 
+import com.ecomarket.inventario.security.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +26,7 @@ public class CatalogoClientService {
     private static final Logger log = LoggerFactory.getLogger(CatalogoClientService.class);
 
     private final RestTemplate restTemplate;
+    private final JwtProvider jwtProvider;
 
     @Value("${ms.catalogo.url}")
     private String msCatalogoUrl;
@@ -33,13 +35,16 @@ public class CatalogoClientService {
      * Verifica la conectividad con el MS catalogo.
      * GET /api/productos
      */
-    public Map<String, Object> ping() {
-        String url = msCatalogoUrl + "/api/productos";
-        log.info("Llamando a MS Catalogo. url={}", url);
-        try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("X-Rol-Usuario", "SISTEMA");
-            HttpEntity<Void> entity = new HttpEntity<>(headers);
+     public Map<String, Object> ping() {
+         String url = msCatalogoUrl + "/api/productos";
+         log.info("Llamando a MS Catalogo. url={}", url);
+         try {
+             HttpHeaders headers = new HttpHeaders();
+             headers.set("X-Rol-Usuario", "SISTEMA");
+             if (jwtProvider != null) {
+                 headers.set("Authorization", "Bearer " + jwtProvider.generarTokenServicio("SISTEMA"));
+             }
+             HttpEntity<Void> entity = new HttpEntity<>(headers);
             @SuppressWarnings("unchecked")
             Map<String, Object> response = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class).getBody();
             log.info("MS Catalogo respondio OK");

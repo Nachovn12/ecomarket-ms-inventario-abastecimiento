@@ -28,7 +28,7 @@ class MsInventarioAbastecimientoApplicationTests {
 
     @Test
     void mainEjecutaAplicacion() {
-        MsInventarioAbastecimientoApplication.main(new String[] {"--spring.profiles.active=test"});
+        MsInventarioAbastecimientoApplication.main(new String[] {"--spring.profiles.active=test", "--server.port=0"});
     }
 
     @Test

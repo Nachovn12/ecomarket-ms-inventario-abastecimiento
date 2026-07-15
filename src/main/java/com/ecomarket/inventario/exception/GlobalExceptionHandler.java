@@ -25,8 +25,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ReglaDeNegocioException.class)
     public ResponseEntity<Map<String, Object>> handleReglaDeNegocio(
             ReglaDeNegocioException ex, HttpServletRequest req) {
-        log.warn("Regla de negocio violada: {} - path: {}", ex.getMessage(), req.getRequestURI());
-        return buildResponse(HttpStatus.UNPROCESSABLE_ENTITY, "Regla de negocio violada",
+        log.warn("Regla de negocio no procesable: {} - path: {}", ex.getMessage(), req.getRequestURI());
+        return buildResponse(HttpStatus.UNPROCESSABLE_ENTITY, "Unprocessable Entity",
                 ex.getMessage(), req.getRequestURI());
     }
 
@@ -36,6 +36,14 @@ public class GlobalExceptionHandler {
         log.warn("SKU duplicado: {} - path: {}", ex.getMessage(), req.getRequestURI());
         return buildResponse(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), req.getRequestURI());
     }
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<Map<String, Object>> handleConflict(
+            ConflictException ex, HttpServletRequest req) {
+        log.warn("Conflicto de negocio: {} - path: {}", ex.getMessage(), req.getRequestURI());
+        return buildResponse(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), req.getRequestURI());
+    }
+
 
     @ExceptionHandler(RecursoNoEncontradoException.class)
     public ResponseEntity<Map<String, Object>> handleNoEncontrado(
@@ -63,6 +71,13 @@ public class GlobalExceptionHandler {
                 "Error de validación en los campos enviados", req.getRequestURI());
         body.put("validaciones", errores);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    @ExceptionHandler(jakarta.validation.ConstraintViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleConstraintViolation(
+            jakarta.validation.ConstraintViolationException ex, HttpServletRequest req) {
+        log.warn("Violación de restricción de parámetros: {} - path: {}", ex.getMessage(), req.getRequestURI());
+        return buildResponse(HttpStatus.BAD_REQUEST, "Bad Request", ex.getMessage(), req.getRequestURI());
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

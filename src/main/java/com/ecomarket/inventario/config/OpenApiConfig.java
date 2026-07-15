@@ -26,6 +26,13 @@ public class OpenApiConfig {
                                                 .description("API del microservicio de Inventario y Abastecimiento. Gestiona stock, movimientos, reservas, pedidos de reabastecimiento y proveedores."))
                                 .servers(List.of(
                                                 new Server().url("http://localhost:8085").description("Servidor local"),
-                                                new Server().url("http://localhost:8081").description("API Gateway")));
-        }
+                                                new Server().url("http://localhost:8081").description("API Gateway")))
+                .components(new io.swagger.v3.oas.models.Components()
+                        .addSecuritySchemes("bearerAuth", new io.swagger.v3.oas.models.security.SecurityScheme()
+                                .type(io.swagger.v3.oas.models.security.SecurityScheme.Type.HTTP)
+                                .scheme("bearer")
+                                .bearerFormat("JWT")))
+                .addSecurityItem(new io.swagger.v3.oas.models.security.SecurityRequirement().addList("bearerAuth"));
+    }
 }
+

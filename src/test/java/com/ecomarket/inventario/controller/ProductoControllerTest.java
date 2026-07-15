@@ -24,7 +24,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(ProductoController.class)
+@WebMvcTest(controllers = ProductoController.class, excludeFilters = @org.springframework.context.annotation.ComponentScan.Filter(type = org.springframework.context.annotation.FilterType.ASSIGNABLE_TYPE, classes = com.ecomarket.inventario.security.JwtAuthenticationFilter.class))
 @TestPropertySource(properties = {
         "springdoc.api-docs.enabled=false",
         "springdoc.swagger-ui.enabled=false"

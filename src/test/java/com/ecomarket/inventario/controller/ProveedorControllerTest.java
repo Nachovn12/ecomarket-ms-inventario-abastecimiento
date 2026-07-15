@@ -23,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Tests del controller de recepciones de mercancía (gestión de abastecimiento desde proveedores).
  * Mapea a RecepcionMercanciaController (AC-2, AC-7).
  */
-@WebMvcTest(RecepcionMercanciaController.class)
+@WebMvcTest(controllers = RecepcionMercanciaController.class, excludeFilters = @org.springframework.context.annotation.ComponentScan.Filter(type = org.springframework.context.annotation.FilterType.ASSIGNABLE_TYPE, classes = com.ecomarket.inventario.security.JwtAuthenticationFilter.class))
 @TestPropertySource(properties = {
         "springdoc.api-docs.enabled=false",
         "springdoc.swagger-ui.enabled=false"

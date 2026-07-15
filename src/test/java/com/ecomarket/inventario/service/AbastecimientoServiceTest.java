@@ -2,6 +2,7 @@ package com.ecomarket.inventario.service;
 
 import com.ecomarket.inventario.dto.PedidoReabastecimientoRequestDTO;
 import com.ecomarket.inventario.dto.PedidoReabastecimientoResponseDTO;
+import com.ecomarket.inventario.exception.ConflictException;
 import com.ecomarket.inventario.exception.RecursoNoEncontradoException;
 import com.ecomarket.inventario.model.PedidoReabastecimiento;
 import com.ecomarket.inventario.model.Producto;
@@ -151,7 +152,7 @@ class AbastecimientoServiceTest {
         PedidoReabastecimiento pedido = buildPedidoConEstado(PedidoReabastecimiento.Estado.APROBADO);
         when(pedidoRepository.findById(1L)).thenReturn(Optional.of(pedido));
 
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(ConflictException.class,
                 () -> pedidoReabastecimientoService.aprobarPedido(1L));
         verify(pedidoRepository, never()).save(any());
     }
@@ -183,7 +184,7 @@ class AbastecimientoServiceTest {
         PedidoReabastecimiento pedido = buildPedidoConEstado(PedidoReabastecimiento.Estado.RECHAZADO);
         when(pedidoRepository.findById(1L)).thenReturn(Optional.of(pedido));
 
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(ConflictException.class,
                 () -> pedidoReabastecimientoService.rechazarPedido(1L, "motivo"));
     }
 

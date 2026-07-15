@@ -54,7 +54,8 @@ public class PedidoReabastecimientoController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Pedido rechazado",
                     content = @Content(schema = @Schema(implementation = PedidoReabastecimientoResponseDTO.class))),
-            @ApiResponse(responseCode = "404", description = "Pedido no encontrado", content = @Content)
+            @ApiResponse(responseCode = "404", description = "Pedido no encontrado", content = @Content),
+            @ApiResponse(responseCode = "409", description = "El pedido no está en estado PENDIENTE", content = @Content)
     })
     @PutMapping("/{id}/rechazar")
     public ResponseEntity<PedidoReabastecimientoResponseDTO> rechazarPedido(
